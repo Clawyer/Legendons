@@ -42,10 +42,10 @@ head
                   each val, index in schemas
                     tr(id_schema=val.id_schema id="row-" + index)
                       td #{val.nom_schema}
-                      td N/1
+                      td N/A
                       td N/A
                       td.text-left(style='padding: 8px;')
-                        button.btn.btn-primary.btn-sm(type='button' style='padding: 2px 4px;')
+                        a.btn.btn-primary.btn-sm(role='button' href='/schema_create?id=' + val.id_schema style='padding: 2px 4px;')
                           i.fas.fa-pen
                         button.openModalDelete.btn.btn-danger.btn-sm(type='button' data-toggle="modal" data-target="#modalDelete" style='padding: 2px 6px; margin-left: 2px;')
                           i.fa.fa-trash
@@ -68,7 +68,7 @@ head
         | Souhaitez-vous vraiment supprimer ce schéma ?
       .modal-footer
         button.btn.btn-secondary(type='button' data-dismiss='modal') Annuler
-        button#deleteMatiere.btn.btn-danger(type='button') Supprimer définitivement
+        button#deleteSchema.btn.btn-danger(type='button') Supprimer définitivement
 
 include includes/scripts
 script(src="/assets/js/schemas.js")

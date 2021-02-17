@@ -50,5 +50,20 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.status(401)
     });
 
+    app.get('/schema', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            pgsql.query(`SELECT * FROM schema S
+            WHERE id_schema=${req.query.id}`)
+                .then(data => {
+                    res.json(data.rows[0]);
+                })
+                .catch(err => {
+                    res.status(500);
+                    console.error(err);
+                });
+        } else
+            res.status(401)
+    });
+
 
 }

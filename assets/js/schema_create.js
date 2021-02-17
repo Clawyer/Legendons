@@ -1,9 +1,9 @@
 $(function () {
-    const plateau = document.getElementById("plateau");
+    const urlParams = new URLSearchParams(window.location.search);
+    let id = urlParams.get('id');
+
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
-
-    let id;
 
     let num = 0;
     let x_debut = [];
@@ -12,6 +12,81 @@ $(function () {
     let y_fin = [];
 
     let start = false;
+
+    if (id) {
+        $.get('/schema', {id: id})
+            .done(json => {
+                let legendes = JSON.parse(json.legendes);
+                let fake = JSON.parse(json.fake);
+                x_debut = JSON.parse(json.x_debut);
+                x_fin = JSON.parse(json.x_fin);
+                y_debut = JSON.parse(json.y_debut);
+                y_fin = JSON.parse(json.y_fin);
+                num = JSON.parse(json.legendes).length;
+                showImg().then(retracer);
+                $('#titre').val(json.nom_schema);
+                for (let i = 0; i < num; i++) {
+                    let nouveau = $("<div>").attr("class", "ligne").attr("id", i+1);
+                    $("#plateau").append(nouveau);
+                    let b = $("<button title='Supprimer' class='bouton_ligne' id='" + (i+1) + "'>").text((i+1) + " : ");
+                    b.on("click", function () {
+                        onClickSupprLegende(this);
+                    });
+                    nouveau.append(b);
+                    nouveau.append($("<input type='text' class='ligne_saisie' size='30' id='" + (i+1) + "'>").val(legendes[i]));
+                }
+                fake.forEach(text => {
+                    let nouveau = $("<div>").attr("class", "ligne");
+                    $("#plateau").append(nouveau);
+                    let b = $("<button title='Supprimer' class='bouton_ligne'>").text("? :");
+                    nouveau.append(b);
+                    nouveau.append($("<input type='text' class='fake_ligne_saisie' size='30'>").val(text));
+                    b.on("click", function () {
+                        $(this).parent().remove();
+                    });
+                })
+            });
+    }
+
+    function showImg() {
+        const url = "/image/" + id + '.jpg';
+
+        $("#img_import").remove();
+
+        $("#canvas").css("background-image", "url(\"" + url + "\")");
+        const img = new Image();
+        img.src = url;
+
+        return new Promise(resolve => {
+            img.addEventListener("load", function () {
+                let h = 500 * this.naturalHeight / this.naturalWidth;
+                $("#canvas").attr("height", h);
+                resolve();
+            });
+        });
+
+
+    }
+
+    function onClickSupprLegende(button) {
+        // on supprime la ligne
+        id = parseInt($(button).attr("id"));
+        $("#" + id + ".ligne").remove();
+
+        // on renomme les autres lignes
+        for (i = id + 1; i <= num; i++) {
+            $("#" + i + ".ligne").attr("id", i - 1);
+            $("#" + i + ".bouton_ligne").attr("id", i - 1).text(i - 1 + " : ");
+            $("#" + i + ".ligne_saisie").attr("id", i - 1);
+        }
+        // on supprime et aussi l'étiquette du modele
+        x_debut.splice(id - 1, 1);
+        y_debut.splice(id - 1, 1);
+        x_fin.splice(id - 1, 1);
+        y_fin.splice(id - 1, 1);
+        num--;
+        retracer();
+    }
 
     function init() {
         num = 0;
@@ -62,6 +137,7 @@ $(function () {
             if (start) {
                 start = false;
                 num++;
+
                 // on créé un carré avec un chiffre dedans
                 x = evt.clientX - canvas.offsetLeft + document.scrollingElement.scrollLeft;
                 y = evt.clientY - canvas.offsetTop + document.scrollingElement.scrollTop;
@@ -73,29 +149,13 @@ $(function () {
 
                 // on ajoute un textarea
                 let nouveau = $("<div>").attr("class", "ligne").attr("id", num);
-                $("#plateau").append(nouveau);
+                console.log(num);
+                nouveau.insertAfter(`#${num-1}.ligne`);
                 let b = $("<button title='Supprimer' class='bouton_ligne' id='" + num + "'>").text(num + " : ");
                 nouveau.append(b);
                 nouveau.append($("<input type='text' class='ligne_saisie' size='30' id='" + num + "'>"));
                 b.on("click", function () {
-                    // on supprime la ligne
-                    id = parseInt($(this).attr("id"));
-                    $("#" + id + ".ligne").remove();
-
-                    // on renomme les autres lignes
-                    for (i = id + 1; i <= num; i++) {
-                        $("#" + i + ".ligne").attr("id", i - 1);
-                        $("#" + i + ".bouton_ligne").attr("id", i - 1).text(i - 1 + " : ");
-                        $("#" + i + ".ligne_saisie").attr("id", i - 1);
-                    }
-                    // on supprime et aussi l'étiquette du modele
-                    x_debut.splice(id - 1, 1);
-                    y_debut.splice(id - 1, 1);
-                    x_fin.splice(id - 1, 1);
-                    y_fin.splice(id - 1, 1);
-                    num--;
-                    retracer();
-
+                    onClickSupprLegende(this);
                 });
             }
         });
@@ -115,36 +175,32 @@ $(function () {
             contentType: false,
             success: function (result) {
                 id = result;
-                const url = "/image/" + id + '.jpg';
-
-                $("#form-group-upload").remove();
-
-                $("#canvas").css("background-image", "url(\"" + url + "\")");
-                const img = new Image();
-                img.src = url;
-
-                img.addEventListener("load", function () {
-                    let h = 500 * this.naturalHeight / this.naturalWidth;
-                    $("#canvas").attr("height", h);
-                });
-                init();
+                showImg().then(init);
             }
         });
 
 
     });
 
-    $('#save').on('click', () => {
+    $('#save').on('submit', (e) => {
+        e.preventDefault();
         const data = {
             id: id,
             legendes: {},
+            fake: {},
             x_debut: x_debut,
             x_fin: x_fin,
             y_debut: y_debut,
-            y_fin: y_fin
+            y_fin: y_fin,
+            titre: $('#titre').val()
         };
         $('.ligne_saisie').each(function () {
             data.legendes[$(this).attr('id')] = $(this).val();
+        });
+        let i = 0;
+        $('.fake_ligne_saisie').each(function () {
+            data.fake[i] = $(this).val();
+            ++i;
         });
 
         $.post('/save', data);
@@ -156,4 +212,16 @@ $(function () {
         $(this).addClass('active');
     });
 
-})
+    $('#fakeButton').on('click', () => {
+        // on ajoute un textarea
+        let nouveau = $("<div>").attr("class", "ligne");
+        $("#plateau").append(nouveau);
+        let b = $("<button title='Supprimer' class='bouton_ligne'>").text("? :");
+        nouveau.append(b);
+        nouveau.append($("<input type='text' class='fake_ligne_saisie' size='30'>"));
+        b.on("click", function () {
+            $(this).parent().remove();
+        });
+    })
+
+});

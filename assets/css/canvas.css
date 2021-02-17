@@ -29,3 +29,10 @@
   grid-template-rows: repeat(10, 1fr);
 }
 
+#drawtoolsbuttons {
+  margin-bottom: 10px;
+}
+
+#drawtoolsbuttons .btn-group {
+  margin-right: 5px;
+}

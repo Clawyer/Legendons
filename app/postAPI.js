@@ -103,7 +103,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                         res.sendStatus(415);
                         return;
                     }
-                    pgsql.query(`INSERT INTO schema(user_schema) VALUES (${cookies.get(req.cookies.user)}) RETURNING id_schema`)
+                    pgsql.query(`INSERT INTO schema(user_schema) VALUES ('${cookies.get(req.cookies.user)}') RETURNING id_schema`)
                         .then(data => {
                             const newpath = __dirname.replace('app', '') + '/images/' + data.rows[0].id_schema + '.jpg';
                             fs.rename(oldpath, newpath, function (err) {
@@ -131,10 +131,18 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.sendStatus(403);
             return;
         }
-        pgsql.query('UPDATE schema SET legendes=$1 WHERE id_schema=$2',
-            [JSON.stringify(req.body.legendes), req.body.id])
-            .then(data => {
-                console.log(data)
+        pgsql.query(`UPDATE schema SET legendes=$1, nom_schema=$2, x_debut=$3, x_fin=$4, y_debut=$5,
+        y_fin=$6, fake=$7 WHERE id_schema=$8`,
+            [
+                JSON.stringify(req.body.legendes),
+                req.body.titre,
+                JSON.stringify(req.body.x_debut),
+                JSON.stringify(req.body.x_fin),
+                JSON.stringify(req.body.y_debut),
+                JSON.stringify(req.body.y_fin),
+                JSON.stringify(req.body.fake),
+                req.body.id])
+            .then(() => {
                 res.send("Ok");
             })
             .catch(err => {
@@ -222,6 +230,22 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             console.error(err);
                             res.status(500);
                         });
+                })
+                .catch(err => {
+                    console.error(err);
+                    res.status(500);
+                });
+        } else
+            res.status(401);
+    })
+
+    app.post('/deleteSchema', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            const id = req.body.schema;
+            pgsql.query(`DELETE FROM schema WHERE id_schema = ${id}`)
+                .then(() => {
+                    fs.unlinkSync(__dirname.replace('app', '') + '/images/' + id + '.jpg');
+                    res.send("Ok");
                 })
                 .catch(err => {
                     console.error(err);

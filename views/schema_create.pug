@@ -9,24 +9,28 @@ head
     #content
       include includes/header.pug
       .container-fluid
-        h3.text-dark.mb-1 Cr&eacute;er un sch&eacute;ma
-        #form-group-upload
-          label(for='import_image') Charger une image&nbsp;
-          input#import_image.import_image(name='ajout' type='file' accept=".jpg,.png,.bmp,.jpeg")
-        .row
-          .col-3
-            .form-group
-              input.form-control(type="text" placeholder="Nom du schéma")
-        #drawtools.row
-          .col
-            .btn-group(role="group")
-              button.btn.btn-secondary.active(type="button")
-                i.far.fa-comment-dots
-              button.btn.btn-secondary(type="button")
-                i.fas.fa-expand-arrows-alt
-        #plateau.wrapper
-          canvas#canvas(height='500' width='500')
-        button#save.btn.btn-success(type='button') Enregistrer
+        form#save
+          h3.text-dark.mb-1 Cr&eacute;er un sch&eacute;ma
+          #img_import
+            label(for='import_image') Charger une image&nbsp;
+            input#import_image.import_image(name='ajout' type='file' accept=".jpg,.png,.bmp,.jpeg" required)
+          .row
+            .col-3
+              .form-group
+                input#titre.form-control(type="text" placeholder="Nom du schéma" required maxlength="40")
+          .row
+            #drawtoolsbuttons.col
+              #drawtools.btn-group(role="group")
+                button#legendesButton.btn.btn-secondary.active(type="button")
+                  i.far.fa-comment-dots
+                button.btn.btn-secondary(type="button")
+                  i.fas.fa-expand-arrows-alt
+              .btn-group(role="group")
+                button#fakeButton.btn.btn-secondary(type="button")
+                  i.fas.fa-question
+          #plateau.wrapper
+            canvas#canvas(height='500' width='500')
+          button.btn.btn-success(type='submit') Enregistrer
     include includes/footer
   include includes/pagetop
 include includes/scripts
