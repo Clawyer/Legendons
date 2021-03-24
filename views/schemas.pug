@@ -12,9 +12,10 @@ head
         .card.shadow
           .card-header.py-3.d-sm-flex.justify-content-between.align-items-center.mb-4
             p.text-primary.m-0.font-weight-bold Liste des schémas
-            a.btn.btn-success.btn-sm.d-none.d-sm-inline-block(role="button" href="/schema_create")
-              i.fas.fa-plus.fa-sm.text-white
-              | &nbsp;Créer un schéma
+            if user.permissions.includes('create_schema')
+              a.btn.btn-success.btn-sm.d-none.d-sm-inline-block(role="button" href="/schema_create")
+                i.fas.fa-plus.fa-sm.text-white
+                | &nbsp;Créer un schéma
           .card-body
             .row
               .col-md-6.text-nowrap
@@ -37,18 +38,25 @@ head
                     th Nom
                     th Matière
                     th Visibilité
-                    th Actions
+                    if user.permissions.includes("manage_matieres")
+                      th Actions
                 tbody
                   each val, index in schemas
                     tr(id_schema=val.id_schema id="row-" + index)
-                      td #{val.nom_schema}
-                      td N/A
-                      td N/A
-                      td.text-left(style='padding: 8px;')
-                        a.btn.btn-primary.btn-sm(role='button' href='/schema_create?id=' + val.id_schema style='padding: 2px 4px;')
-                          i.fas.fa-pen
-                        button.openModalDelete.btn.btn-danger.btn-sm(type='button' data-toggle="modal" data-target="#modalDelete" style='padding: 2px 6px; margin-left: 2px;')
-                          i.fa.fa-trash
+                      td
+                        a(href="/play?id=" + val.id_schema) #{val.nom_schema}
+                      td #{val.nom_matiere}
+                      if val.schema_public
+                        td Public
+                      else
+                        td Privé
+                      if user.permissions.includes("manage_matieres")
+                        td.text-left(style='padding: 8px;')
+                          if user.email === val.email
+                            a.btn.btn-primary.btn-sm(role='button' href='/schema_create?id=' + val.id_schema style='padding: 2px 4px;')
+                              i.fas.fa-pen
+                            button.openModalDelete.btn.btn-danger.btn-sm(type='button' data-toggle="modal" data-target="#modalDelete" style='padding: 2px 6px; margin-left: 2px;')
+                              i.fa.fa-trash
             .row
               .col-md-6.align-self-center
                 p#dataTable_info.dataTables_info(role='status' aria-live='polite')

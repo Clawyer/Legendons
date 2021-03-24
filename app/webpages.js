@@ -16,7 +16,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
     function resolveUser(email) {
         return new Promise((resolve, reject) => {
             pgsql.query(`SELECT * FROM utilisateur U
-            JOIN role R ON U.role_utilisateur=R.nom_role
+            NATURAL JOIN role R
             WHERE email='${email}'`)
                 .then(data => {
                     data.rows[0].permissions = data.rows[0].permissions.split(" ")
@@ -72,14 +72,14 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             page: 'compte'
                         }
                         pgsql.query(`SELECT * FROM (
-                            SELECT id_matiere, nom_matiere, COUNT(id_utilisateur_appartenir) AS nombre FROM appartenir A
-                            JOIN matiere M ON A.id_matiere_appartenir = M.id_matiere
-                            GROUP BY id_matiere, nom_matiere
-                            ORDER BY nom_matiere ) R
+                            SELECT M.id_matiere AS id_matiere, nom_matiere, COUNT(email) AS nombre FROM appartenir A
+                            NATURAL JOIN matiere M
+                            GROUP BY M.id_matiere, M.nom_matiere
+                            ORDER BY M.nom_matiere ) R
                         WHERE id_matiere IN (
-                            SELECT id_matiere_appartenir
+                            SELECT id_matiere
                             FROM appartenir
-                            WHERE id_utilisateur_appartenir='${cookies.get(req.cookies.user)}')`)
+                            WHERE email='${cookies.get(req.cookies.user)}')`)
                             .then(data => {
                                 renderData['matieres'] = data.rows
                                 res.render('compte', renderData);
@@ -112,14 +112,15 @@ module.exports = function (app, pgsql, dirname, cookies) {
                         }
 
                         pgsql.query(`SELECT * FROM (
-                            SELECT id_matiere, nom_matiere, COUNT(id_utilisateur_appartenir) AS nombre FROM appartenir A
-                            JOIN matiere M ON A.id_matiere_appartenir = M.id_matiere
-                            GROUP BY id_matiere, nom_matiere
-                            ORDER BY nom_matiere ) R
+                            SELECT M.id_matiere AS id_matiere, nom_matiere, COUNT(id_schema) AS nb_schemas, COUNT(email) AS nombre FROM appartenir A
+                            NATURAL JOIN matiere M
+                            NATURAL LEFT JOIN schema S
+                            GROUP BY M.id_matiere, M.nom_matiere
+                            ORDER BY M.nom_matiere ) R
                         WHERE id_matiere IN (
-                            SELECT id_matiere_appartenir
+                            SELECT id_matiere
                             FROM appartenir
-                            WHERE id_utilisateur_appartenir='${cookies.get(req.cookies.user)}')`)
+                            WHERE email='${cookies.get(req.cookies.user)}')`)
                             .then(data => {
                                 renderData['matieres'] = data.rows
                                 res.render('matieres', renderData);
@@ -151,13 +152,18 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             page: 'schemas'
                         }
 
-                        pgsql.query(`SELECT id_schema, nom_schema FROM schema S
-                            WHERE user_schema='${renderData.user.email}'`)
+                        pgsql.query(`SELECT DISTINCT id_schema, nom_schema, nom_matiere, schema_public, S.email
+                            FROM schema S NATURAL JOIN matiere M
+                            JOIN appartenir A ON A.id_matiere=M.id_matiere
+                            WHERE (S.email='${renderData.user.email}'
+                            OR (A.email='${renderData.user.email}' AND schema_public=true))
+                            ${req.query.id_matiere ? "AND S.id_matiere=" + req.query.id_matiere : ""};`)
                             .then(data => {
                                 renderData['schemas'] = data.rows
                                 res.render('schemas', renderData);
                             })
                             .catch(err => {
+
                                 console.error(err);
                                 res.status(500);
                             });
@@ -178,12 +184,42 @@ module.exports = function (app, pgsql, dirname, cookies) {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             resolveUser(cookies.get(req.cookies.user))
                 .then(data => {
-                    if (data) {
+                    if (data && data.permissions.includes('create_schema')) {
                         let renderData = {
                             user: data,
                             page: 'schema_create'
                         }
-                        res.render('schema_create', renderData);
+                        pgsql.query(`SELECT nom_matiere, M.id_matiere FROM matiere M NATURAL JOIN appartenir A
+                        WHERE email='${cookies.get(req.cookies.user)}'`)
+                            .then(data => {
+                                renderData.matieres = data.rows;
+                                res.render('schema_create', renderData);
+                            }).catch(err => {
+                            console.error(err);
+                            res.status(500);
+                        });
+                    } else
+                        res.redirect('/');
+                }).catch(err => {
+                console.error(err);
+                res.status(500);
+            });
+
+        } else {
+            res.redirect('/');
+        }
+    });
+
+    app.get('/play', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            resolveUser(cookies.get(req.cookies.user))
+                .then(data => {
+                    if (data) {
+                        let renderData = {
+                            user: data,
+                            page: 'play'
+                        }
+                        res.render('play', renderData);
                     } else
                         res.redirect('/');
                 }).catch(err => {

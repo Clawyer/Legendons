@@ -12,9 +12,10 @@ head
         .card.shadow
           .card-header.py-3.d-sm-flex.justify-content-between.align-items-center.mb-4
             p.text-primary.m-0.font-weight-bold Liste des matières
-            button.openModalCreate.btn.btn-success.btn-sm.d-none.d-sm-inline-block(type="button" data-toggle="modal" data-target="#modalCreate")
-              i.fas.fa-plus.fa-sm.text-white
-              | &nbsp;Créer une matière
+            if user.permissions.includes('create_matiere')
+              button.openModalCreate.btn.btn-success.btn-sm.d-none.d-sm-inline-block(type="button" data-toggle="modal" data-target="#modalCreate")
+                i.fas.fa-plus.fa-sm.text-white
+                | &nbsp;Créer une matière
           .card-body
             .row
               .col-md-6.text-nowrap
@@ -42,9 +43,10 @@ head
                 tbody
                   each val, index in matieres
                     tr(id_matiere=val.id_matiere id="row-" + index)
-                      td #{val.nom_matiere}
+                      td
+                        a(href="/schemas?id_matiere="+val.id_matiere) #{val.nom_matiere}
                       td #{val.nombre}
-                      td N/A
+                      td #{val.nb_schemas}
                       if user.permissions.includes("manage_matieres")
                         td.text-left(style='padding: 8px;')
                           button.openModalEdit.btn.btn-primary.btn-sm(type='button' data-toggle="modal" data-target="#modalEdit" style='padding: 2px 4px;')

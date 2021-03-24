@@ -2,7 +2,7 @@ doctype html
 head
   title Créer un schéma - L&eacute;gendons
   include includes/head.pug
-  link(href="/assets/css/canvas.css" rel="stylesheet")
+  link(href="/assets/css/schema_create.css" rel="stylesheet")
 #wrapper
   include includes/navbar.pug
   #content-wrapper.d-flex.flex-column
@@ -16,8 +16,16 @@ head
             input#import_image.import_image(name='ajout' type='file' accept=".jpg,.png,.bmp,.jpeg" required)
           .row
             .col-3
-              .form-group
-                input#titre.form-control(type="text" placeholder="Nom du schéma" required maxlength="40")
+              input#titre.form-control(type="text" placeholder="Nom du schéma" required maxlength="40")
+            .col-3
+              select(required)#matiere.form-control
+                option(disabled selected value="") Choisir une matière
+                each val in matieres
+                  option(value=val.id_matiere) #{val.nom_matiere}
+            .col-3
+              select(required)#visibilite.form-control
+                option(selected value="false") Privé
+                option(value="true") Public
           .row
             #drawtoolsbuttons.col
               #drawtools.btn-group(role="group")
@@ -30,7 +38,7 @@ head
                   i.fas.fa-question
           #plateau.wrapper
             canvas#canvas(height='500' width='500')
-          button.btn.btn-success(type='submit') Enregistrer
+          button#buttonSave.btn.btn-success(type='submit') Enregistrer
     include includes/footer
   include includes/pagetop
 include includes/scripts

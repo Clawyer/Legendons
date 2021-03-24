@@ -23,28 +23,33 @@ $(function () {
                 y_debut = JSON.parse(json.y_debut);
                 y_fin = JSON.parse(json.y_fin);
                 num = JSON.parse(json.legendes).length;
+                $(`#matiere option:selected`).attr('selected', 'false');
+                $(`#matiere option[value="${json.id_matiere}"]`).attr('selected', 'true');
+                $(`#visibilite option:selected`).attr('selected', 'false');
+                $(`#visibilite option[value="${json.schema_public}"]`).attr('selected', 'true');
                 showImg().then(retracer);
                 $('#titre').val(json.nom_schema);
                 for (let i = 0; i < num; i++) {
-                    let nouveau = $("<div>").attr("class", "ligne").attr("id", i+1);
+                    let nouveau = $("<div>").attr("class", "ligne").attr("id", i + 1);
                     $("#plateau").append(nouveau);
-                    let b = $("<button title='Supprimer' class='bouton_ligne' id='" + (i+1) + "'>").text((i+1) + " : ");
+                    let b = $("<button title='Supprimer' class='bouton_ligne' id='" + (i + 1) + "'>").text((i + 1) + " : ");
                     b.on("click", function () {
                         onClickSupprLegende(this);
                     });
                     nouveau.append(b);
-                    nouveau.append($("<input type='text' class='ligne_saisie' size='30' id='" + (i+1) + "'>").val(legendes[i]));
+                    nouveau.append($("<input type='text' class='ligne_saisie' size='30' id='" + (i + 1) + "'>").val(legendes[i]));
                 }
-                fake.forEach(text => {
-                    let nouveau = $("<div>").attr("class", "ligne");
-                    $("#plateau").append(nouveau);
-                    let b = $("<button title='Supprimer' class='bouton_ligne'>").text("? :");
-                    nouveau.append(b);
-                    nouveau.append($("<input type='text' class='fake_ligne_saisie' size='30'>").val(text));
-                    b.on("click", function () {
-                        $(this).parent().remove();
-                    });
-                })
+                if (fake)
+                    fake.forEach(text => {
+                        let nouveau = $("<div>").attr("class", "ligne");
+                        $("#plateau").append(nouveau);
+                        let b = $("<button title='Supprimer' class='bouton_ligne'>").text("? :");
+                        nouveau.append(b);
+                        nouveau.append($("<input type='text' class='fake_ligne_saisie' size='30'>").val(text));
+                        b.on("click", function () {
+                            $(this).parent().remove();
+                        });
+                    })
             });
     }
 
@@ -150,7 +155,10 @@ $(function () {
                 // on ajoute un textarea
                 let nouveau = $("<div>").attr("class", "ligne").attr("id", num);
                 console.log(num);
-                nouveau.insertAfter(`#${num-1}.ligne`);
+                if ($('#plateau .ligne').length != 0)
+                    nouveau.insertAfter(`#${num - 1}.ligne`);
+                else
+                    $('#plateau').append(nouveau);
                 let b = $("<button title='Supprimer' class='bouton_ligne' id='" + num + "'>").text(num + " : ");
                 nouveau.append(b);
                 nouveau.append($("<input type='text' class='ligne_saisie' size='30' id='" + num + "'>"));
@@ -192,7 +200,9 @@ $(function () {
             x_fin: x_fin,
             y_debut: y_debut,
             y_fin: y_fin,
-            titre: $('#titre').val()
+            titre: $('#titre').val(),
+            id_matiere: $('#matiere option:selected').val(),
+            public: $('#visibilite option:selected').val()
         };
         $('.ligne_saisie').each(function () {
             data.legendes[$(this).attr('id')] = $(this).val();
@@ -203,11 +213,25 @@ $(function () {
             ++i;
         });
 
-        $.post('/save', data);
+        $.post('/save', data)
+            .done(() => {
+                let valid = $('<i id="valid" class="fas fa-check">')
+                valid.insertAfter('#buttonSave');
+                setTimeout(() => {
+                    valid.remove();
+                }, 10000);
+            })
+            .fail(() => {
+                let valid = $('<i id="invalid" class="fas fa-times">')
+                valid.insertAfter('#buttonSave');
+                setTimeout(() => {
+                    valid.remove();
+                }, 10000);
+        });
     });
 
 
-    $('#drawtools button').on('click', function() {
+    $('#drawtools button').on('click', function () {
         $('#drawtools button').removeClass('active');
         $(this).addClass('active');
     });

@@ -1,0 +1,58 @@
+#canvas {
+    border: solid;
+    background-size: contain;
+    background-repeat: no-repeat;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 1;
+    grid-row-end: 10;
+}
+
+
+.ligne {
+    grid-column-start: 2;
+    grid-column-end: 3;
+    padding: 0em;
+    padding-left: 1em;
+}
+
+.ligneSaisie {
+    background-color: #ffd8a8;
+    border-radius: 5px;
+    padding: 0em;
+}
+
+.wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+}
+
+#drawtoolsbuttons {
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+#drawtoolsbuttons .btn-group {
+    margin-right: 5px;
+}
+
+#valid {
+    color: limegreen;
+    margin-left: 5px;
+}
+
+#invalid {
+    color: red;
+    margin-left: 5px;
+}
+
+.draggable {
+    float: left;
+    grid-column-start: 3;
+    grid-column-end: 4;
+}
+
+.ui-widget-header p, .ui-widget-content p {
+    margin: 0;
+}

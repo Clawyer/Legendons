@@ -30,10 +30,10 @@ module.exports = function (app, pgsql, dirname, cookies) {
 
     app.get('/matiere', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
-            pgsql.query(`SELECT nom_matiere, id_matiere, nom, prenom, email FROM matiere M
-            JOIN appartenir A ON M.id_matiere = A.id_matiere_appartenir
-            JOIN utilisateur U ON A.id_utilisateur_appartenir = U.email
-            WHERE id_matiere=${req.query.matiere}`)
+            pgsql.query(`SELECT nom_matiere, M.id_matiere, nom, prenom, U.email FROM matiere M
+            NATURAL JOIN appartenir A
+            NATURAL JOIN utilisateur U
+            WHERE M.id_matiere=${req.query.matiere}`)
                 .then(data => {
                     res.json({
                         nom: data.rows[0].nom_matiere,

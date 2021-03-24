@@ -103,7 +103,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                         res.sendStatus(415);
                         return;
                     }
-                    pgsql.query(`INSERT INTO schema(user_schema) VALUES ('${cookies.get(req.cookies.user)}') RETURNING id_schema`)
+                    pgsql.query(`INSERT INTO schema(email) VALUES ('${cookies.get(req.cookies.user)}') RETURNING id_schema`)
                         .then(data => {
                             const newpath = __dirname.replace('app', '') + '/images/' + data.rows[0].id_schema + '.jpg';
                             fs.rename(oldpath, newpath, function (err) {
@@ -132,7 +132,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
             return;
         }
         pgsql.query(`UPDATE schema SET legendes=$1, nom_schema=$2, x_debut=$3, x_fin=$4, y_debut=$5,
-        y_fin=$6, fake=$7 WHERE id_schema=$8`,
+        y_fin=$6, fake=$7, id_matiere=$8, schema_public=$9 WHERE id_schema=$10`,
             [
                 JSON.stringify(req.body.legendes),
                 req.body.titre,
@@ -141,6 +141,8 @@ module.exports = function (app, pgsql, dirname, cookies) {
                 JSON.stringify(req.body.y_debut),
                 JSON.stringify(req.body.y_fin),
                 JSON.stringify(req.body.fake),
+                req.body.id_matiere,
+                req.body.public,
                 req.body.id])
             .then(() => {
                 res.send("Ok");
@@ -156,7 +158,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
             pgsql.query(`INSERT INTO matiere(nom_matiere) VALUES ('${req.body.nom}') RETURNING id_matiere`)
                 .then(data => {
                     const id = data.rows[0].id_matiere;
-                    let query = `INSERT INTO appartenir(id_matiere_appartenir, id_utilisateur_appartenir) VALUES (${id}, '${cookies.get(req.cookies.user)}')`;
+                    let query = `INSERT INTO appartenir(id_matiere, email) VALUES (${id}, '${cookies.get(req.cookies.user)}')`;
                     if (req.body.liste)
                         req.body.liste.forEach(user => {
                             query += `,(${id}, '${user}')`
@@ -191,7 +193,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                 });
 
             if (req.body.ajouter) {
-                query = `INSERT INTO appartenir(id_matiere_appartenir, id_utilisateur_appartenir) VALUES `;
+                query = `INSERT INTO appartenir(id_matiere, email) VALUES `;
                 req.body.ajouter.forEach(user => {
                     query += `(${id}, '${user}'),`
                 });
@@ -203,7 +205,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
             }
 
             if (req.body.supprimer) {
-                query = `DELETE FROM appartenir WHERE id_matiere_appartenir = ${id} AND id_utilisateur_appartenir IN (`;
+                query = `DELETE FROM appartenir WHERE id_matiere = ${id} AND email IN (`;
                 req.body.supprimer.forEach(user => {
                     query += `'${user}',`
                 });
@@ -220,7 +222,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
     app.post('/deleteMatiere', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             const id = req.body.matiere;
-            pgsql.query(`DELETE FROM appartenir WHERE id_matiere_appartenir = ${id}`)
+            pgsql.query(`DELETE FROM appartenir WHERE id_matiere = ${id}`)
                 .then(() => {
                     pgsql.query(`DELETE FROM matiere WHERE id_matiere = ${id}`)
                         .then(() => {

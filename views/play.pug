@@ -1,0 +1,20 @@
+doctype html
+head
+  title Jouer avec un schéma - L&eacute;gendons
+  include includes/head.pug
+  link(href="/assets/css/schema_create.css" rel="stylesheet")
+#wrapper
+  include includes/navbar.pug
+  #content-wrapper.d-flex.flex-column
+    #content
+      include includes/header.pug
+      .container-fluid
+        form#valider
+          h3.text-dark.mb-1 Jouer avec un schéma
+          #plateau.wrapper
+            canvas#canvas(height='500' width='500')
+          button#buttonValider.btn.btn-success(type='submit') Valider
+    include includes/footer
+  include includes/pagetop
+include includes/scripts
+script(src="/assets/js/play.js")

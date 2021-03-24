@@ -39,6 +39,15 @@ nav.navbar.navbar-dark.align-items-start.sidebar.sidebar-dark.accordion.bg-gradi
             i.fas.fa-table
             span Mes schémas
       li.nav-item
+        if page=='evaluations'
+          a.nav-link.active(href='/evaluations')
+            i.fas.fa-graduation-cap
+            span Mes évaluations
+        else
+          a.nav-link(href='/evaluations')
+            i.fas.fa-graduation-cap
+            span Mes évaluations
+      li.nav-item
         a.nav-link(href='/logout')
           i.far.fa-user-circle
           span Se déconnecter
