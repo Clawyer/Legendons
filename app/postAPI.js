@@ -144,7 +144,8 @@ module.exports = function (app, pgsql, dirname, cookies) {
                 req.body.id_matiere,
                 req.body.public,
                 req.body.id])
-            .then(() => {
+            .then((data) => {
+                console.log(data);
                 res.send("Ok");
             })
             .catch(err => {

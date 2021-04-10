@@ -125,7 +125,7 @@ $(function () {
         });
         $('#listeEtudiantsOnCreate').html('');
         $('#createMatiere input').val('');
-        console.log('Click')
+        etudiants = new Set();
     });
 
     $('.openModalEdit').on('click', function (e) {
@@ -218,6 +218,7 @@ $(function () {
 
     $('#createMatiere').on('submit', e => {
         e.preventDefault();
+        console.log(etudiants);
         $.post('/ajoutMatiere', {
                 nom: $('#nomInputCreate').val(),
                 liste: Array.from(etudiants)

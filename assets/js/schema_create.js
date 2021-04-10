@@ -1,6 +1,6 @@
 $(function () {
     const urlParams = new URLSearchParams(window.location.search);
-    let id = urlParams.get('id');
+    let idSchema = urlParams.get('id');
 
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
@@ -13,8 +13,8 @@ $(function () {
 
     let start = false;
 
-    if (id) {
-        $.get('/schema', {id: id})
+    if (idSchema) {
+        $.get('/schema', {id: idSchema})
             .done(json => {
                 let legendes = JSON.parse(json.legendes);
                 let fake = JSON.parse(json.fake);
@@ -22,7 +22,7 @@ $(function () {
                 x_fin = JSON.parse(json.x_fin);
                 y_debut = JSON.parse(json.y_debut);
                 y_fin = JSON.parse(json.y_fin);
-                num = JSON.parse(json.legendes).length;
+                num = legendes ? legendes.length : 0;
                 $(`#matiere option:selected`).attr('selected', 'false');
                 $(`#matiere option[value="${json.id_matiere}"]`).attr('selected', 'true');
                 $(`#visibilite option:selected`).attr('selected', 'false');
@@ -54,7 +54,7 @@ $(function () {
     }
 
     function showImg() {
-        const url = "/image/" + id + '.jpg';
+        const url = "/image/" + idSchema + '.jpg';
 
         $("#img_import").remove();
 
@@ -182,7 +182,7 @@ $(function () {
             processData: false,
             contentType: false,
             success: function (result) {
-                id = result;
+                idSchema = result;
                 showImg().then(init);
             }
         });
@@ -193,7 +193,7 @@ $(function () {
     $('#save').on('submit', (e) => {
         e.preventDefault();
         const data = {
-            id: id,
+            id: idSchema,
             legendes: {},
             fake: {},
             x_debut: x_debut,
