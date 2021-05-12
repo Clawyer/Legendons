@@ -74,7 +74,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                         let renderData = {
                             user: data,
                             page: 'compte' // page selectionnée à gauche dans le panneau
-                        } // liste des matiere dispo avec l'user
+                        }
                         pgsql.query(`SELECT * FROM (
                                         SELECT M.ID_MATIERE AS ID_MATIERE,
                                         NOM_MATIERE,
@@ -104,7 +104,19 @@ module.exports = function (app, pgsql, dirname, cookies) {
                                         WHERE EMAIL = '${cookies.get(req.cookies.user)}')`)
                             .then(data => {
                                 renderData['matieres'] = data.rows
-                                res.render('compte', renderData); // Renvoit la page comtpe
+                            })
+                        pgsql.query(`SELECT * FROM (
+                                SELECT G.id_groupe AS id_groupe, nom_groupe, COUNT(email) AS nombre FROM est_relie E
+                                NATURAL JOIN groupe G
+                                GROUP BY G.id_groupe, G.nom_groupe
+                                ORDER BY G.nom_groupe ) R
+                            WHERE id_groupe IN (
+                                SELECT id_groupe
+                                FROM est_relie
+                                WHERE email='${cookies.get(req.cookies.user)}')`)
+                            .then(data => {
+                                renderData['groupes'] = data.rows
+                                res.render('compte', renderData);
                             })
                             .catch(err => {
                                 console.error(err);
