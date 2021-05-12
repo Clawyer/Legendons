@@ -1,55 +1,64 @@
 nav.navbar.navbar-dark.align-items-start.sidebar.sidebar-dark.accordion.bg-gradient-primary.p-0
-  .container-fluid.d-flex.flex-column.p-0
-    a.navbar-brand.d-flex.justify-content-center.align-items-center.sidebar-brand.m-0(href='#')
-      .sidebar-brand-icon.rotate-n-15
-        i.fas.fa-biohazard
-      .sidebar-brand-text.mx-3
-        span Légendons
-    hr.sidebar-divider.my-0
-    ul#accordionSidebar.nav.navbar-nav.text-light
-      li.nav-item
-        a.nav-link(href='/')
-          i.fas.fa-tachometer-alt
-          span Tableau de bord
-      li.nav-item
-        if page=='compte'
-          a.nav-link.active(href='/compte')
-            i.fas.fa-user
-            span Profil
-        else
-          a.nav-link(href='/compte')
-            i.fas.fa-user
-            span Profil
-      li.nav-item
-        if page=='matieres'
-          a.nav-link.active(href='/matieres')
-            i.fas.fa-book-open
-            span Mes matières
-        else
-          a.nav-link(href='/matieres')
-            i.fas.fa-book-open
-            span Mes matières
-      li.nav-item
-        if page=='schemas'
-          a.nav-link.active(href='/schemas')
-            i.fas.fa-table
-            span Mes schémas
-        else
-          a.nav-link(href='/schemas')
-            i.fas.fa-table
-            span Mes schémas
-      li.nav-item
-        if page=='evaluations'
-          a.nav-link.active(href='/evaluations')
-            i.fas.fa-graduation-cap
-            span Mes évaluations
-        else
-          a.nav-link(href='/evaluations')
-            i.fas.fa-graduation-cap
-            span Mes évaluations
-      li.nav-item
-        a.nav-link(href='/logout')
-          i.far.fa-user-circle
-          span Se déconnecter
-    .text-center.d-none.d-md-inline
-      button#sidebarToggle.btn.rounded-circle.border-0(type='button')
+    .container-fluid.d-flex.flex-column.p-0
+        a.navbar-brand.d-flex.justify-content-center.align-items-center.sidebar-brand.m-0(href='#')
+            .sidebar-brand-icon.rotate-n-15
+                i.fas.fa-biohazard
+            .sidebar-brand-text.mx-3
+                span Légendons
+        hr.sidebar-divider.my-0
+        ul#accordionSidebar.nav.navbar-nav.text-light
+            li.nav-item
+                a.nav-link(href='/')
+                    i.fas.fa-tachometer-alt
+                    span Tableau de bord
+            li.nav-item
+                if page == 'compte'
+                    a.nav-link.active(href='/compte')
+                        i.fas.fa-user
+                        span Profil
+                else
+                    a.nav-link(href='/compte')
+                        i.fas.fa-user
+                        span Profil
+            li.nav-item
+                if page == 'matieres'
+                    a.nav-link.active(href='/matieres')
+                        i.fas.fa-book-open
+                        span Mes matières
+                else
+                    a.nav-link(href='/matieres')
+                        i.fas.fa-book-open
+                        span Mes matières
+            li.nav-item
+                if page == 'groupes'
+                    a.nav-link.active(href='/groupes')
+                        i.fas.fa-book-open
+                        span Mes groupes
+                else
+                    a.nav-link(href='/groupes')
+                        i.fas.fa-book-open
+                        span Mes groupes
+            li.nav-item
+                if page == 'schemas'
+                    a.nav-link.active(href='/schemas')
+                        i.fas.fa-table
+                        span Mes schémas
+                else
+                    a.nav-link(href='/schemas')
+                        i.fas.fa-table
+                        span Mes schémas
+            li.nav-item
+                if page == 'evaluations'
+                    a.nav-link.active(href='/evaluations')
+                        i.fas.fa-graduation-cap
+                        span Mes évaluations
+                else
+                    a.nav-link(href='/evaluations')
+                        i.fas.fa-graduation-cap
+                        span Mes évaluations
+            li.nav-item
+                a.nav-link(href='/logout')
+                    i.far.fa-user-circle
+                    span Se déconnecter
+        .text-center.d-none.d-md-inline
+            button#sidebarToggle.btn.rounded-circle.border-0(type='button')

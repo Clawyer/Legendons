@@ -3,8 +3,8 @@ $(function () {
     var passError = $('<div class="alert alert-danger alert-dismissible fade show" role="alert">Mot de passe incorrect<button type="button" class="close" data-dismiss="alert" aria-label="Fermer "><span aria-hidden="true">×</span></button></div>');
     $('#login').on('submit', e => {
         e.preventDefault();
-        var isValid = $('#login')[0].checkValidity();
-        $('#login').addClass('was-validated');
+        var isValid = $('#login')[0].checkValidity(); // -> formulaire de co valide 
+        $('#login').addClass('was-validated');// icon check
         if (isValid) {
             $.post('/login', {
                     email: $('#email').val(),

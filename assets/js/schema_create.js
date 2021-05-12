@@ -136,12 +136,12 @@ $(function () {
             let y = evt.clientY - canvas.offsetTop + document.scrollingElement.scrollTop;
             x_fin[num] = x;
             y_fin[num] = y;
-            retracer();
+            retracer(); // afficher le rectangle plus la ligne
         })
         .on('mouseup', function (evt) {
             if (start) {
                 start = false;
-                num++;
+                num++; // prochain numéro à dessiner
 
                 // on créé un carré avec un chiffre dedans
                 x = evt.clientX - canvas.offsetLeft + document.scrollingElement.scrollLeft;
@@ -204,16 +204,16 @@ $(function () {
             id_matiere: $('#matiere option:selected').val(),
             public: $('#visibilite option:selected').val()
         };
-        $('.ligne_saisie').each(function () {
-            data.legendes[$(this).attr('id')] = $(this).val();
+        $('.ligne_saisie').each(function () { // chaque attribut legende
+            data.legendes[$(this).attr('id')] = $(this).val(); // { 1: attr1, 2: attr2 } json
         });
         let i = 0;
-        $('.fake_ligne_saisie').each(function () {
+        $('.fake_ligne_saisie').each(function () { // compter tous les  fake
             data.fake[i] = $(this).val();
             ++i;
         });
 
-        $.post('/save', data)
+        $.post('/save', data) // save
             .done(() => {
                 let valid = $('<i id="valid" class="fas fa-check">')
                 valid.insertAfter('#buttonSave');

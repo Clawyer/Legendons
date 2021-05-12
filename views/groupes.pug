@@ -1,0 +1,123 @@
+doctype html
+// creer une ligne pour chaque matiere ligne45
+head
+    title Groupes - L&eacute;gendons
+    include includes/head.pug
+#wrapper
+    include includes/navbar.pug
+    #content-wrapper.d-flex.flex-column
+        #content
+            include includes/header.pug
+            .container-fluid
+                h3.text-dark.mb-4 Mes Groupes
+                .card.shadow
+                    .card-header.py-3.d-sm-flex.justify-content-between.align-items-center.mb-4
+                        p.text-primary.m-0.font-weight-bold Liste des groupes
+                        if user.permissions.includes('create_group')
+                            button.openModalCreate.btn.btn-success.btn-sm.d-none.d-sm-inline-block(type="button" data-toggle="modal" data-target="#modalCreate")
+                                i.fas.fa-plus.fa-sm.text-white
+                                | &nbsp;Créer un groupe
+                    .card-body
+                        .row
+                            .col-md-6.text-nowrap
+                                #dataTable_length.dataTables_length(aria-controls='dataTable')
+                                    label
+                                        | Afficher&nbsp;
+                                        select#affichage.form-control.form-control-sm.custom-select.custom-select-sm
+                                            option(value='10' selected='') 10
+                                            option(value='25') 25
+                                            option(value='50') 50
+                                            option(value='100') 100
+                            .col-md-6
+                                #dataTable_filter.text-md-right.dataTables_filter
+                                    label
+                                        input.form-control.form-control-sm(type='search' aria-controls='dataTable' placeholder='Rechercher')
+                        #dataTable.table-responsive.table.mt-2(role='grid' aria-describedby='dataTable_info')
+                            table#dataTable.table.my-0
+                                thead
+                                    tr
+                                        th Nom
+                                        th Nombre d'utilisateurs
+                                        if user.permissions.includes("manage_groups")
+                                            th Actions
+                                tbody
+                                    each val, index in groupes
+                                        tr(id_groupe=val.id_groupe id="row-" + index)
+                                            td
+                                                a(href="/groupe?groupe=" + val.id_groupe) #{val.nom_groupe}
+                                            td #{val.nombre}
+                                            if user.permissions.includes("manage_groups")
+                                                td.text-left(style='padding: 8px;')
+                                                    button.openModalEdit.btn.btn-primary.btn-sm(type='button' data-toggle="modal" data-target="#modalEdit" style='padding: 2px 4px;')
+                                                        i.fas.fa-pen
+                                                    button.openModalDelete.btn.btn-danger.btn-sm(type='button' data-toggle="modal" data-target="#modalDelete" style='padding: 2px 6px; margin-left: 2px;')
+                                                        i.fa.fa-trash
+                        .row
+                            .col-md-6.align-self-center
+                                p#dataTable_info.dataTables_info(role='status' aria-live='polite')
+                            .col-md-6
+                                nav.d-lg-flex.justify-content-lg-end.dataTables_paginate.paging_simple_numbers
+                                    ul.pagination
+        include includes/footer
+    include includes/pagetop
+#modalCreate.modal.fade(role='dialog' tabindex='-1')
+    .modal-dialog.modal-lg(role='document')
+        .modal-content
+            form#createGroup
+                .modal-header
+                    h4.modal-title Créer un groupe
+                    button.close(type='button' data-dismiss='modal' aria-label='Fermer')
+                        span(aria-hidden='true') &times;
+                .modal-body.ui-front
+                    .form-group.row
+                        .col-4.mb-3.mb-sm-0
+                            label.col-form-label Nom du groupe
+                        .col
+                            input#nomInputCreate.form-control.form-control-user(type='text' name='nom' required maxlength="30")
+                    .form-group.row
+                        .col-4.mb-3.mb-sm-0
+                            label.col-form-label Liste des utilisateurs
+                        .col
+                            #listeEtudiantsOnCreate
+                            input#listeEtudiantsCreate.listeEtudiants.ui-widget.form-control.form-control-user(type="text" name='etudiant' placeholder='Chercher un utilisateur')
+                .modal-footer
+                    button.btn.btn-light(type='button' data-dismiss='modal') Fermer
+                    button.btn.btn-success(type='submit') Enregistrer
+#modalEdit.modal.fade(role='dialog' tabindex='-1')
+    .modal-dialog.modal-lg(role='document')
+        .modal-content
+            form#editGroup
+                .modal-header
+                    h4.modal-title Modifier un groupe
+                    button.close(type='button' data-dismiss='modal' aria-label='Fermer')
+                        span(aria-hidden='true') &times;
+                .modal-body.ui-front
+                    .form-group.row
+                        .col-4.mb-3.mb-sm-0
+                            label.col-form-label Nom du groupe
+                        .col
+                            input#nomInputEdit.form-control.form-control-user(type='text' name='nom' required maxlength="30")
+                    .form-group.row
+                        .col-4.mb-3.mb-sm-0
+                            label.col-form-label Liste des utilisateurs
+                        .col
+                            #listeEtudiantsOnEdit
+                            input#listeEtudiantsEdit.listeEtudiants.ui-widget.form-control.form-control-user(type="text" name='etudiant' placeholder='Chercher un utilisateur')
+                .modal-footer
+                    button.btn.btn-light(type='button' data-dismiss='modal') Fermer
+                    button.btn.btn-success(type='submit') Enregistrer
+#modalDelete.modal.fade(role='dialog' tabindex='-1')
+    .modal-dialog(role='document')
+        .modal-content
+            .modal-header
+                h5.modal-title Confirmer la suppression
+                button.close(type='button' data-dismiss='modal' aria-label='Fermer')
+                    span(aria-hidden='true') &times;
+            .modal-body
+                | Souhaitez-vous vraiment supprimer ce groupe ?
+            .modal-footer
+                button.btn.btn-secondary(type='button' data-dismiss='modal') Annuler
+                button#deleteGroup.btn.btn-danger(type='button') Supprimer définitivement
+
+include includes/scripts
+script(src="/assets/js/groupes.js")
