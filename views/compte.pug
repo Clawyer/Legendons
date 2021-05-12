@@ -67,17 +67,17 @@ head
                                                         input#nom.form-control(type='text' placeholder='Doe' name='last_name' maxlength='20' value=user.nom)
                                             .form-group#save
                                                 button.btn.btn-primary.btn-sm(type='submit') Enregistrer
-                                .card.shadow.mb-4
-                                    .card-header.py-3
-                                        h6.text-primary.font-weight-bold.m-0 Mes groupes
-                                    .card-body
-                                        each val in groupes
-                                            h5.font-weight-bold.small
-                                                | #{val.nom_groupe}
-                                                span.float-right
-                                                    | #{val.nombre} utilisateurs
-                                        if user.permissions.includes("manage_groupes")
-                                            a.btn.btn-primary.btn-sm(role='button' href='/groupes') G&eacute;rer les groupes
+                        .card.shadow.mb-4
+                            .card-header.py-3
+                                h6.text-primary.font-weight-bold.m-0 Mes groupes
+                            .card-body
+                                each val in groupes
+                                    h5.font-weight-bold.small
+                                        | #{val.nom_groupe}
+                                        span.float-right
+                                            | #{val.nombre} utilisateurs
+                                if user.permissions.includes("manage_groups")
+                                    a.btn.btn-primary.btn-sm(role='button' href='/groupes') G&eacute;rer les groupes
         include includes/footer.pug
     include includes/pagetop.pug
 include includes/scripts.pug
