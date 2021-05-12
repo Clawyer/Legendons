@@ -218,7 +218,7 @@ $(function () {
 
     $('#createGroup').on('submit', e => {
         e.preventDefault();
-        console.log(etudiants);
+
         $.post('/ajoutGroup', {
             nom: $('#nomInputCreate').val(),
             liste: Array.from(etudiants)
