@@ -161,7 +161,9 @@ module.exports = function (app, pgsql, dirname, cookies) {
 
     app.post('/ajoutMatiere', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
-            pgsql.query(`INSERT INTO matiere(nom_matiere) VALUES ('${req.body.nom}') RETURNING id_matiere`)
+            let nom = req.body.nom;
+            nom = nom.replace("'", "''");
+            pgsql.query(`INSERT INTO matiere(nom_matiere) VALUES ('${nom}') RETURNING id_matiere`)
                 .then(data => {
                     const id = data.rows[0].id_matiere;
                     let query = `INSERT INTO appartenir(id_matiere, email) VALUES (${id}, '${cookies.get(req.cookies.user)}')`;
@@ -201,7 +203,9 @@ module.exports = function (app, pgsql, dirname, cookies) {
         let query;
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             const id = req.body.id;
-            pgsql.query(`UPDATE matiere SET nom_matiere='${req.body.nom}' WHERE id_matiere = ${id}`)
+            let nom = req.body.nom;
+            nom = nom.replace("'", "''");
+            pgsql.query(`UPDATE matiere SET nom_matiere='${nom}' WHERE id_matiere = ${id}`)
                 .then(() => {
                     res.send("Ok")
                 })
@@ -304,7 +308,9 @@ module.exports = function (app, pgsql, dirname, cookies) {
 
     app.post('/ajoutGroup', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
-            pgsql.query(`INSERT INTO groupe(nom_groupe) VALUES ('${req.body.nom}') RETURNING id_groupe`)
+            let nom = req.body.nom;
+            nom = nom.replace("'", "''");
+            pgsql.query(`INSERT INTO groupe(nom_groupe) VALUES ('${nom}') RETURNING id_groupe`)
                 .then(data => {
                     const id = data.rows[0].id_groupe;
                     let query = `INSERT INTO est_relie(id_groupe, email) VALUES (${id}, '${cookies.get(req.cookies.user)}')`;
@@ -333,8 +339,10 @@ module.exports = function (app, pgsql, dirname, cookies) {
         let query;
         let query2;
         if (req.cookies.user && cookies.has(req.cookies.user)) {
+            let nom = req.body.nom;
+            nom = nom.replace("'", "''");
             const id = req.body.id;
-            pgsql.query(`UPDATE groupe SET nom_groupe='${req.body.nom}' WHERE id_groupe = ${id}`)
+            pgsql.query(`UPDATE groupe SET nom_groupe='${nom}' WHERE id_groupe = ${id}`)
                 .then(() => {
                     res.send("Ok")
                 })

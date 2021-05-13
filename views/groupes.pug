@@ -43,8 +43,7 @@ head
                                 tbody
                                     each val, index in groupes
                                         tr(id_groupe=val.id_groupe id="row-" + index)
-                                            td
-                                                #{val.nom_groupe}
+                                            td #{val.nom_groupe}
                                             td #{val.nombre}
                                             if user.permissions.includes("manage_groups")
                                                 td.text-left(style='padding: 8px;')
