@@ -76,32 +76,29 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             page: 'compte' // page selectionnée à gauche dans le panneau
                         }
                         pgsql.query(`SELECT * FROM (
-                                        SELECT M.ID_MATIERE AS ID_MATIERE,
-                                        NOM_MATIERE,
-                                        COUNT(EMAIL) AS NOMBRE
-                                    FROM
-                                        (SELECT ID_MATIERE,
-                                                EMAIL
-                                            FROM EST_COMPRIS_DANS E
-                                            NATURAL JOIN EST_RELIE ES
-                                            UNION SELECT ID_MATIERE,
-                                                EMAIL
-                                            FROM APPARTENIR A) T
-                                    NATURAL JOIN MATIERE M
-                                    GROUP BY M.ID_MATIERE,
-                                        M.NOM_MATIERE
-                                    ORDER BY M.NOM_MATIERE) R
-                                    WHERE id_matiere IN (
-                                        SELECT id_matiere
-                                        FROM appartenir
-                                        WHERE email='${cookies.get(req.cookies.user)}')
-                                    OR ID_MATIERE IN		
-                                    (SELECT id_matiere from
-                                        groupe
-                                        natural left join est_relie E
-                                        natural left join est_compris_dans es
-                                        NATURAL LEFT JOIN Matiere M 
-                                        WHERE EMAIL = '${cookies.get(req.cookies.user)}')`)
+                                            SELECT M.ID_MATIERE AS ID_MATIERE,
+                                            NOM_MATIERE,
+                                            COUNT(EMAIL) AS NOMBRE
+                                        FROM
+                                            (SELECT ID_MATIERE,
+                                                    EMAIL
+                                                FROM EST_COMPRIS_DANS E
+                                                NATURAL JOIN EST_RELIE ES
+                                                UNION SELECT ID_MATIERE,
+                                                    EMAIL
+                                                FROM APPARTENIR A) T
+                                        NATURAL JOIN MATIERE M
+                                        GROUP BY M.ID_MATIERE,
+                                            M.NOM_MATIERE
+                                        ORDER BY M.NOM_MATIERE) R
+                                        WHERE id_matiere IN (
+                                            SELECT ID_MATIERE
+                                                FROM EST_COMPRIS_DANS E
+                                                NATURAL JOIN EST_RELIE ES
+                                                UNION SELECT ID_MATIERE
+                                                FROM APPARTENIR A
+												WHERE EMAIL ='${cookies.get(req.cookies.user)}')
+										ORDER BY nom_matiere `)
                             .then(data => {
                                 renderData['matieres'] = data.rows
                             })
@@ -171,16 +168,13 @@ module.exports = function (app, pgsql, dirname, cookies) {
                                             T2.NB_SCHEMAS
                                         ORDER BY M.NOM_MATIERE) R
                                         WHERE id_matiere IN (
-                                            SELECT id_matiere
-                                            FROM appartenir
-                                            WHERE email='${cookies.get(req.cookies.user)}')
-                                        OR ID_MATIERE IN		
-                                        (SELECT id_matiere from
-                                            groupe
-                                            natural left join est_relie E
-                                            natural left join est_compris_dans es
-                                            NATURAL LEFT JOIN Matiere M 
-                                            WHERE EMAIL = '${cookies.get(req.cookies.user)}')`)
+                                            SELECT ID_MATIERE
+                                                FROM EST_COMPRIS_DANS E
+                                                NATURAL JOIN EST_RELIE ES
+                                                UNION SELECT ID_MATIERE
+                                                FROM APPARTENIR A
+												WHERE EMAIL ='${cookies.get(req.cookies.user)}')
+										ORDER BY nom_matiere `)
                             .then(data => {
                                 renderData['matieres'] = data.rows
                                 res.render('matieres', renderData);

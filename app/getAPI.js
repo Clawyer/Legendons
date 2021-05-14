@@ -86,7 +86,6 @@ module.exports = function (app, pgsql, dirname, cookies) {
                 })
                 .catch(err => {
                     res.status(500);
-                    console.error(err);
                 });
         } else
             res.status(401)
