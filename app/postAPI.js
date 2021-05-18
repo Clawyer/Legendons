@@ -6,6 +6,7 @@ const fs = require('fs');
 
 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
+//random id
 function makeid(length) {
     let result = '';
     const charactersLength = characters.length;
@@ -23,18 +24,21 @@ function makeid(length) {
  */
 module.exports = function (app, pgsql, dirname, cookies) {
 
+    // email et pwd en parametre 
     app.post('/login', (req, res) => {
         pgsql.query(`SELECT *
                      FROM utilisateur 
                      WHERE email='${req.body.email}'`)
             .then(query => {
+                // if 0
                 if (query.rowCount === 0) res.status(400).send("Utilisateur non trouvé");
                 else {
                     if (query.rows[0].password !== req.body.password) res.status(403).send("Mot de passe incorrect");
                     else {
                         const cookie = makeid(32);
                         cookies.set(cookie, req.body.email);
-                        res.cookie('user', cookie);
+                        // -> cookie
+                        res.cookie('user', cookie); // -> envoit cookie
                         res.send('Success');
                     }
                 }
@@ -76,7 +80,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
             });
 
     });
-
+//photo marche pas, recuperer img user gravatar /reintialiser pwd
     app.post('/updateUser', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             pgsql.query(`UPDATE utilisateur
@@ -105,6 +109,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                     }
                     pgsql.query(`INSERT INTO schema(email) VALUES ('${cookies.get(req.cookies.user)}') RETURNING id_schema`)
                         .then(data => {
+                            //deplace image
                             const newpath = __dirname.replace('app', '') + '/images/' + data.rows[0].id_schema + '.jpg';
                             fs.rename(oldpath, newpath, function (err) {
                                 if (err) {
@@ -156,10 +161,159 @@ module.exports = function (app, pgsql, dirname, cookies) {
 
     app.post('/ajoutMatiere', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
-            pgsql.query(`INSERT INTO matiere(nom_matiere) VALUES ('${req.body.nom}') RETURNING id_matiere`)
+            let nom = req.body.nom;
+            nom = nom.replace("'", "''");
+            pgsql.query(`INSERT INTO matiere(nom_matiere) VALUES ('${nom}') RETURNING id_matiere`)
                 .then(data => {
                     const id = data.rows[0].id_matiere;
                     let query = `INSERT INTO appartenir(id_matiere, email) VALUES (${id}, '${cookies.get(req.cookies.user)}')`;
+                    let query2 = `INSERT INTO est_compris_dans(id_matiere, id_groupe) VALUES `;
+                    if (req.body.liste)
+                        req.body.liste.forEach(user => {
+                            query += `,(${id}, '${user}')`
+                        });
+                    pgsql.query(query)
+                        .then(() => {
+                            res.send("Ok");
+                        })
+                        .catch(err => {
+                            res.sendStatus(500);
+                            console.error(err);
+                        });
+                    if (req.body.gliste) {
+                        req.body.gliste.forEach(groupe => {
+                            query2 += `(${id}, ${groupe}),`
+                        })
+                        query2 = query2.slice(0, -1)
+                        pgsql.query(query2)
+                            .catch(err => {
+                                console.error(err);
+                            });
+                    }
+                })
+                .catch(err => {
+                    res.sendStatus(500);
+                    console.error(err);
+                });
+        } else
+            res.status(501);
+    });
+
+    app.post('/editMatiere', (req, res) => {
+        let query;
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            const id = req.body.id;
+            let nom = req.body.nom;
+            nom = nom.replace("'", "''");
+            pgsql.query(`UPDATE matiere SET nom_matiere='${nom}' WHERE id_matiere = ${id}`)
+                .then(() => {
+                    res.send("Ok")
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+
+            if (req.body.ajouter) {
+                query = `INSERT INTO appartenir(id_matiere, email) VALUES `;
+                req.body.ajouter.forEach(user => {
+                    query += `(${id}, '${user}'),`
+                });
+                query = query.slice(0, -1);
+                // enleve derniere virgule
+                pgsql.query(query)
+                    .catch(err => {
+                        console.error(err);
+                    });
+            }
+
+            if (req.body.supprimer) {
+                query = `DELETE FROM appartenir WHERE id_matiere = ${id} AND email IN (`;
+                req.body.supprimer.forEach(user => {
+                    query += `'${user}',`
+                });
+                query = query.slice(0, -1) + ')'
+                pgsql.query(query)
+                    .catch(err => {
+                        console.error(err);
+                    });
+            }
+            if (req.body.ajouter_g) {
+                query = `INSERT INTO est_compris_dans(id_matiere, id_groupe) VALUES `;
+                req.body.ajouter_g.forEach(groupe => {
+                    query += `(${id}, '${groupe}'),`
+                });
+                query = query.slice(0, -1);
+                // enleve derniere virgule
+                pgsql.query(query)
+                    .catch(err => {
+                        console.error(err);
+                    });
+            }
+            if (req.body.supprimer_g) {
+                query = `DELETE FROM est_compris_dans WHERE id_matiere = ${id} AND id_groupe IN (`;
+                req.body.supprimer_g.forEach(groupe => {
+                    query += `'${groupe}',`
+                });
+                query = query.slice(0, -1) + ')'
+                pgsql.query(query)
+                    .catch(err => {
+                        console.error(err);
+                    });
+            }
+        } else
+            res.status(401);
+    });
+
+    app.post('/deleteMatiere', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            const id = req.body.matiere;
+            pgsql.query(`DELETE FROM appartenir WHERE id_matiere = ${id}`)
+                .then(() => {
+                    pgsql.query(`DELETE FROM est_compris_dans WHERE id_matiere = ${id}`)
+                        .then(() => {
+                            pgsql.query(`DELETE FROM matiere WHERE id_matiere = ${id}`)
+                                .then(() => {
+                                    res.send("Ok")
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    res.status(500);
+                                });
+                        })
+                })
+                .catch(err => {
+                    console.error(err);
+                    res.status(500);
+                });
+        } else
+            res.status(401);
+    })
+
+    app.post('/deleteSchema', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            const id = req.body.schema;
+            pgsql.query(`DELETE FROM schema WHERE id_schema = ${id}`)
+                .then(() => {
+                    fs.unlinkSync(__dirname.replace('app', '') + '/images/' + id + '.jpg');
+                    res.send("Ok");
+                })
+                .catch(err => {
+                    console.error(err);
+                    res.status(500);
+                });
+        } else
+            res.status(401);
+    })
+
+
+    app.post('/ajoutGroup', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            let nom = req.body.nom;
+            nom = nom.replace("'", "''");
+            pgsql.query(`INSERT INTO groupe(nom_groupe) VALUES ('${nom}') RETURNING id_groupe`)
+                .then(data => {
+                    const id = data.rows[0].id_groupe;
+                    let query = `INSERT INTO est_relie(id_groupe, email) VALUES (${id}, '${cookies.get(req.cookies.user)}')`;
                     if (req.body.liste)
                         req.body.liste.forEach(user => {
                             query += `,(${id}, '${user}')`
@@ -181,11 +335,14 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.status(501);
     });
 
-    app.post('/editMatiere', (req, res) => {
+    app.post('/editGroup', (req, res) => {
         let query;
+        let query2;
         if (req.cookies.user && cookies.has(req.cookies.user)) {
+            let nom = req.body.nom;
+            nom = nom.replace("'", "''");
             const id = req.body.id;
-            pgsql.query(`UPDATE matiere SET nom_matiere='${req.body.nom}' WHERE id_matiere = ${id}`)
+            pgsql.query(`UPDATE groupe SET nom_groupe='${nom}' WHERE id_groupe = ${id}`)
                 .then(() => {
                     res.send("Ok")
                 })
@@ -194,11 +351,12 @@ module.exports = function (app, pgsql, dirname, cookies) {
                 });
 
             if (req.body.ajouter) {
-                query = `INSERT INTO appartenir(id_matiere, email) VALUES `;
+                query = `INSERT INTO est_relie(id_groupe, email) VALUES `;
                 req.body.ajouter.forEach(user => {
                     query += `(${id}, '${user}'),`
                 });
                 query = query.slice(0, -1);
+                // enleve derniere virgule
                 pgsql.query(query)
                     .catch(err => {
                         console.error(err);
@@ -206,11 +364,20 @@ module.exports = function (app, pgsql, dirname, cookies) {
             }
 
             if (req.body.supprimer) {
-                query = `DELETE FROM appartenir WHERE id_matiere = ${id} AND email IN (`;
+                query = `DELETE FROM est_relie WHERE id_groupe = ${id} AND email IN (`;
                 req.body.supprimer.forEach(user => {
                     query += `'${user}',`
                 });
                 query = query.slice(0, -1) + ')'
+                pgsql.query(query)
+                    .catch(err => {
+                        console.error(err);
+                    });
+                query2 = `DELETE FROM est_compris_dans WHERE id_groupe = ${id} AND id_matiere IN (`;
+                req.body.supprimer.forEach(user => {
+                    query2 += `'${user}',`
+                });
+                query2 = query2.slice(0, -1) + ')'
                 pgsql.query(query)
                     .catch(err => {
                         console.error(err);
@@ -220,12 +387,12 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.status(401);
     });
 
-    app.post('/deleteMatiere', (req, res) => {
+    app.post('/deleteGroup', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
-            const id = req.body.matiere;
-            pgsql.query(`DELETE FROM appartenir WHERE id_matiere = ${id}`)
+            const id = req.body.groupe;
+            pgsql.query(`DELETE FROM est_relie WHERE id_groupe = ${id}`)
                 .then(() => {
-                    pgsql.query(`DELETE FROM matiere WHERE id_matiere = ${id}`)
+                    pgsql.query(`DELETE FROM groupe WHERE id_groupe = ${id}`)
                         .then(() => {
                             res.send("Ok")
                         })
@@ -233,22 +400,6 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             console.error(err);
                             res.status(500);
                         });
-                })
-                .catch(err => {
-                    console.error(err);
-                    res.status(500);
-                });
-        } else
-            res.status(401);
-    })
-
-    app.post('/deleteSchema', (req, res) => {
-        if (req.cookies.user && cookies.has(req.cookies.user)) {
-            const id = req.body.schema;
-            pgsql.query(`DELETE FROM schema WHERE id_schema = ${id}`)
-                .then(() => {
-                    fs.unlinkSync(__dirname.replace('app', '') + '/images/' + id + '.jpg');
-                    res.send("Ok");
                 })
                 .catch(err => {
                     console.error(err);

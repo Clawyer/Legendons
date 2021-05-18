@@ -1,71 +1,85 @@
 doctype html
 head
-  title Profil - L&eacute;gendons
-  include includes/head.pug
+    title Profil - L&eacute;gendons
+    include includes/head.pug
+    //# div avec id wrapper
 #wrapper
-  include includes/navbar.pug
-  #content-wrapper.d-flex.flex-column
-    #content
-      include includes/header.pug
-      .container-fluid
-        h3.text-dark.mb-4 Bonjour #{user.prenom} !
-        .row.mb-3
-          .col-lg-4
-            .card.mb-3
-              .card-body.text-center.shadow
-                img.rounded-circle.mb-3.mt-4(src='/assets/img/dogs/image2.jpeg' width='160' height='160')
-                .mb-3
-                  button.btn.btn-primary.btn-sm(type='button')
-                    | Modifier la
-                    | photo
-            .card.shadow.mb-4
-              .card-header.py-3
-                h6.text-primary.font-weight-bold.m-0 Mes matières
-              .card-body
-                each val in matieres
-                  h5.font-weight-bold.small
-                    | #{val.nom_matiere}
-                    span.float-right
-                      | #{val.nombre} utilisateurs
-                if user.permissions.includes("manage_matieres")
-                  a.btn.btn-primary.btn-sm(role='button' href='/matieres') G&eacute;rer les matières
-          .col-lg-8
-            .row
-              .col
-                .card.shadow.mb-3
-                  .card-header.py-3
-                    p.text-primary.m-0.font-weight-bold Param&egrave;tres du compte
-                  .card-body
-                    form#editData
-                      .form-row
-                        .col
-                          .form-group
-                            label(for='username')
-                              strong
-                                | Nom
-                                | d&apos;utilisateur
-                            input#username.form-control(type='text' placeholder='user.name' name='username' maxlength='20' value=user.username)
-                        .col
-                          .form-group
-                            label(for='email')
-                              strong
-                                | Adresse
-                                | mail
-                            input#mail.form-control(type='email' placeholder='user@example.com' name='email' value=user.email)
-                      .form-row
-                        .col
-                          .form-group
-                            label(for='first_name')
-                              strong Pr&eacute;nom
-                            input#prenom.form-control(type='text' placeholder='Valérie' name='first_name' maxlength='20' value=user.prenom)
-                        .col
-                          .form-group
-                            label(for='last_name')
-                              strong Nom
-                            input#nom.form-control(type='text' placeholder='Doe' name='last_name' maxlength='20' value=user.nom)
-                      .form-group#save
-                        button.btn.btn-primary.btn-sm(type='submit') Enregistrer
-    include includes/footer.pug
-  include includes/pagetop.pug
+    include includes/navbar.pug
+    #content-wrapper.d-flex.flex-column
+        #content
+            include includes/header.pug
+            .container-fluid
+                h3.text-dark.mb-4 Bonjour #{user.prenom} !
+                .row.mb-3
+                    .col-lg-4
+                        .card.mb-3
+                            .card-body.text-center.shadow
+                                img.rounded-circle.mb-3.mt-4(src='/assets/img/dogs/image2.jpeg' width='160' height='160')
+                                .mb-3
+                                    button.btn.btn-primary.btn-sm(type='button')
+                                        | Modifier la
+                                        | photo
+                        .card.shadow.mb-4
+                            .card-header.py-3
+                                h6.text-primary.font-weight-bold.m-0 Mes matières
+                            .card-body
+                                each val in matieres
+                                    h5.font-weight-bold.small
+                                        |
+                                        a(href="/schemas?id_matiere=" + val.id_matiere) #{val.nom_matiere}
+                                        span.float-right
+                                            | #{val.nombre} utilisateurs
+                                if user.permissions.includes("manage_matieres")
+                                    a.btn.btn-primary.btn-sm(role='button' href='/matieres') G&eacute;rer les matières
+                    .col-lg-8
+                        .row
+                            .col
+                                .card.shadow.mb-3
+                                    .card-header.py-3
+                                        p.text-primary.m-0.font-weight-bold Param&egrave;tres du compte
+                                    .card-body
+                                        form#editData
+                                            .form-row
+                                                .col
+                                                    .form-group
+                                                        label(for='username')
+                                                            strong
+                                                                | Nom
+                                                                | d&apos;utilisateur
+                                                        input#username.form-control(type='text' placeholder='user.name' name='username' maxlength='20' value=user.username)
+                                                .col
+                                                    .form-group
+                                                        label(for='email')
+                                                            strong
+                                                                | Adresse
+                                                                | mail
+                                                        input#mail.form-control(type='email' placeholder='user@example.com' name='email' value=user.email)
+                                            .form-row
+                                                .col
+                                                    .form-group
+                                                        label(for='first_name')
+                                                            strong Pr&eacute;nom
+                                                        input#prenom.form-control(type='text' placeholder='Valérie' name='first_name' maxlength='20' value=user.prenom)
+                                                .col
+                                                    .form-group
+                                                        label(for='last_name')
+                                                            strong Nom
+                                                        input#nom.form-control(type='text' placeholder='Doe' name='last_name' maxlength='20' value=user.nom)
+                                            .form-group#save
+                                                button.btn.btn-primary.btn-sm(type='submit') Enregistrer
+                        .card.shadow.mb-4
+                            .card-header.py-3
+                                h6.text-primary.font-weight-bold.m-0 Mes groupes
+                            .card-body
+                                each val in groupes
+                                    h5.font-weight-bold.small
+                                        | #{val.nom_groupe}
+                                        span.float-right
+                                            | #{val.nombre} utilisateurs
+                                if user.permissions.includes("manage_groups")
+                                    a.btn.btn-primary.btn-sm(role='button' href='/groupes') G&eacute;rer les groupes
+        include includes/footer.pug
+    include includes/pagetop.pug
 include includes/scripts.pug
+//include toutes les pages
 script(src="/assets/js/compte.js") 

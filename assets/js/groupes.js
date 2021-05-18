@@ -92,13 +92,9 @@ $(function () {
 
 
     var liste = [];
-    var gliste = []
     var listeTemp = []
-    var groupeTemp = [];
     var etudiants = new Set();
-    var groupes = new Set();
     var anciensEtudiants = new Set();
-    var anciensGroupes = new Set();
     var idEdit;
     var idDelete;
     // json = { data = { list des users}}
@@ -112,25 +108,8 @@ $(function () {
                     });
             });
             $(".listeEtudiants").autocomplete('option', 'source', liste)
-            //option: json, list 
+            //option: json, list
             listeTemp = Array.from(liste);
-        })
-        .fail(xhr => {
-            console.error(xhr);
-        });
-
-    $.get('/listeGroupes')
-        .done(json => {
-            json.data.forEach(user => {
-                if (user.email != json.user)
-                    gliste.push({
-                        label: `${user.nom_groupe}`,
-                        value: `${user.id_groupe}`
-                    });
-            });
-            $(".listeGroupes").autocomplete('option', 'source', liste)
-            //option: json, list 
-            groupeTemp = Array.from(gliste);
         })
         .fail(xhr => {
             console.error(xhr);
@@ -138,38 +117,26 @@ $(function () {
 
     $('.openModalCreate').on('click', e => {
         listeTemp = Array.from(liste);
-        groupeTemp = Array.from(gliste);
         $(".listeEtudiants").autocomplete('option', {
             'source': listeTemp
         });
-        $(".listeGroupes").autocomplete('option', {
-            'source': groupeTemp
-        });
         $('#listeEtudiantsOnCreate').html('');
-        $('#listeGroupesOnCreate').html('');
-        $('#createMatiere input').val('');
+        $('#createGroup input').val('');
         etudiants = new Set();
-        groupes = new Set();
     });
 
     $('.openModalEdit').on('click', function (e) {
         listeTemp = Array.from(liste);
-        groupeTemp = Array.from(gliste)
         $(".listeEtudiants").autocomplete('option', {
             'source': listeTemp
         });
-        $(".listeGroupes").autocomplete('option', {
-            'source': groupeTemp
-        });
         $('#listeEtudiantsOnEdit').html('');
-        $('#listeGroupesOnEdit').html('');
-        $('#editMatiere input').val('');
+        $('#editGroup input').val('');
 
-        $.get('/matiere', {
-            matiere: $(this).parent().parent().attr('id_matiere')
+        $.get('/groupe', {
+            groupe: $(this).parent().parent().attr('id_groupe')
         })
             .done(json => {
-                console.log(json);
                 $('#nomInputEdit').val(json.nom);
                 idEdit = json.id
                 json.users.forEach(user => {
@@ -182,7 +149,7 @@ $(function () {
                         var index = listeTemp.map(val => {
                             return val.value;
                         }).indexOf(user.email);
-                        listeTemp.splice(index, 1); // etud deja add
+                        listeTemp.splice(index, 1);
                         suppr.on('click', function (e) {
                             var id = $(this).attr('email')
                             var index = liste.map(val => {
@@ -201,43 +168,14 @@ $(function () {
                 $(".listeEtudiants").autocomplete('option', {
                     'source': listeTemp
                 });
-
-            });
-        $.get('/matiere_groupe', {
-            matiere: $(this).parent().parent().attr('id_matiere')
-        })
-            .done(json => {
-                json.groupes.forEach(groupe => {
-                    groupes.add(groupe.id_groupe);
-                    anciensGroupes.add(groupe.id_groupe);
-                    var suppr_grp = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_groupe', groupe.id_groupe).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(groupe.nom_groupe + ' ').append($('<i>').addClass("fa fa-trash-o"));
-                    var index = groupeTemp.map(val => {
-                        return val.value;
-                    }).indexOf(groupe.id_groupe);
-                    groupeTemp.splice(index, 1); // groupe deja add
-                    suppr_grp.on('click', function (e) {
-                        var id = $(this).attr('id_groupe')
-                        var index = gliste.map(val => {
-                            return val.value;
-                        }).indexOf(parseInt(id));
-                        groupes.delete(parseInt(id));
-                        groupeTemp.push(gliste[index]);
-                        $(".listeGroupes").autocomplete('option', { // remet à jour la recherche après del
-                            'source': groupeTemp
-                        });
-                        $(this).remove(); //suppr de l'affichage
-                    });
-                    $('#listeGroupesOnEdit').append(suppr_grp);
-                });
-                $(".listeGroupes").autocomplete('option', {
-                    'source': groupeTemp
-                });
             });
     });
+
+
     // bouton suppr matiere
     $('.openModalDelete').on('click', function (e) {
         console.log('click');
-        idDelete = $(this).parent().parent().attr('id_matiere');
+        idDelete = $(this).parent().parent().attr('id_groupe');
     });
 
     $(".listeEtudiants")
@@ -272,58 +210,18 @@ $(function () {
                     'source': listeTemp
                 });
                 console.log(suppr);
-                $('#listeEtudiantsOnCreate').append(suppr.clone(true));
+                $('#listeEtudiantsOnCreate').append(suppr.clone());
                 $('#listeEtudiantsOnEdit').append(suppr);
                 return false;
             }
         });
 
-    $(".listeGroupes")
-        .autocomplete({
-            minLength: 0, // a changer
-            source: gliste,
-            focus: function (event, ui) {
-                $(this).val(ui.item.label);
-                return false;
-            },
-            select: function (event, ui) {
-                var index = groupeTemp.map(val => {
-                    return val.value;
-                }).indexOf(ui.item.value);
-                groupes.add(ui.item.value);
-                $(this).val("");
-                var suppr = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_groupe', ui.item.value).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(ui.item.label + ' ').append($('<i>').addClass("fa fa-trash-o"));
-                suppr.on('click', function (e) {
-                    var id = $(this).attr('id_groupe')
-                    var index = gliste.map(val => {
-                        return val.value;
-                    }).indexOf(id);
-                    groupes.delete(id);
-                    groupeTemp.push(gliste[index]); // Rajout element select de recherche
-                    $(".listeGroupes").autocomplete('option', {
-                        'source': groupeTemp
-                    });
-                    $(this).remove();
-                });
-                groupeTemp.splice(index, 1); // Suppr element selectionné de la recherche
-                $(".listeGroupes").autocomplete('option', {
-                    'source': groupeTemp
-                });
-                console.log(suppr);
-                $('#listeGroupesOnCreate').append(suppr.clone(true));
-                $('#listeGroupesOnEdit').append(suppr);
-                return false;
-            }
-        });
-
-
-    $('#createMatiere').on('submit', e => {
+    $('#createGroup').on('submit', e => {
         e.preventDefault();
-        console.log(etudiants);
-        $.post('/ajoutMatiere', {
+
+        $.post('/ajoutGroup', {
             nom: $('#nomInputCreate').val(),
-            liste: Array.from(etudiants),
-            gliste: Array.from(groupes)
+            liste: Array.from(etudiants)
         })
             .done(msg => {
                 window.location.reload();
@@ -333,13 +231,10 @@ $(function () {
             })
     })
 
-    $('#editMatiere').on('submit', e => {
+    $('#editGroup').on('submit', e => {
         e.preventDefault();
         var supprimer = new Set();
         var ajouter = new Set();
-        var supprimer_g = new Set();
-        var ajouter_g = new Set();
-
         etudiants.forEach(etudiant => {
             if (!anciensEtudiants.has(etudiant))
                 ajouter.add(etudiant);
@@ -348,23 +243,12 @@ $(function () {
             if (!etudiants.has(etudiant))
                 supprimer.add(etudiant);
         });
-        anciensGroupes.forEach(groupe => {
-            if (!groupes.has(groupe))
-                supprimer_g.add(groupe);
-        });
-        groupes.forEach(groupe => {
-            if (!anciensGroupes.has(groupe))
-                ajouter_g.add(groupe);
-        });
 
-
-        $.post('/editMatiere', {
+        $.post('/editGroup', {
             nom: $('#nomInputEdit').val(),
             id: idEdit,
             ajouter: Array.from(ajouter),
-            supprimer: Array.from(supprimer),
-            ajouter_g: Array.from(ajouter_g),
-            supprimer_g: Array.from(supprimer_g)
+            supprimer: Array.from(supprimer)
         })
             .done(msg => {
                 window.location.reload();
@@ -373,10 +257,10 @@ $(function () {
                 console.error(xhr);
             });
     });
-    // suppr def
-    $('#deleteMatiere').on('click', e => {
-        $.post('/deleteMatiere', {
-            matiere: idDelete
+
+    $('#deleteGroup').on('click', e => {
+        $.post('/deleteGroup', {
+            groupe: idDelete
         })
             .done(msg => {
                 window.location.reload();

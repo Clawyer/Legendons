@@ -1,4 +1,5 @@
 doctype html
+// creer une ligne pour chaque matiere ligne45
 head
   title Matières - L&eacute;gendons
   include includes/head.pug
@@ -41,11 +42,11 @@ head
                     if user.permissions.includes("manage_matieres")
                       th Actions
                 tbody
-                  each val, index in matieres
+                  each val, index in matieres 
                     tr(id_matiere=val.id_matiere id="row-" + index)
                       td
                         a(href="/schemas?id_matiere="+val.id_matiere) #{val.nom_matiere}
-                      td #{val.nombre}
+                      td #{val.nombre} 
                       td #{val.nb_schemas}
                       if user.permissions.includes("manage_matieres")
                         td.text-left(style='padding: 8px;')
@@ -72,7 +73,7 @@ head
         .modal-body.ui-front
           .form-group.row
             .col-4.mb-3.mb-sm-0
-              label.col-form-label Nom de la matière
+              label.col-form-label Nom de la matiere
             .col
               input#nomInputCreate.form-control.form-control-user(type='text' name='nom' required maxlength="30")
           .form-group.row
@@ -81,6 +82,12 @@ head
             .col
               #listeEtudiantsOnCreate
               input#listeEtudiantsCreate.listeEtudiants.ui-widget.form-control.form-control-user(type="text" name='etudiant' placeholder='Chercher un utilisateur')
+          .form-group.row
+            .col-4.mb-3.mb-sm-0
+              label.col-form-label Liste des groupes
+            .col
+              #listeGroupesOnCreate
+              input#listeGroupesCreate.listeGroupes.ui-widget.form-control.form-control-user(type="text" name='groupe' placeholder='Chercher un groupe')
         .modal-footer
           button.btn.btn-light(type='button' data-dismiss='modal') Fermer
           button.btn.btn-success(type='submit') Enregistrer
@@ -104,6 +111,12 @@ head
             .col
               #listeEtudiantsOnEdit
               input#listeEtudiantsEdit.listeEtudiants.ui-widget.form-control.form-control-user(type="text" name='etudiant' placeholder='Chercher un utilisateur')
+          .form-group.row
+            .col-4.mb-3.mb-sm-0
+              label.col-form-label Liste des groupes
+            .col
+              #listeGroupesOnEdit
+              input#listeGroupesEdit.listeGroupes.ui-widget.form-control.form-control-user(type="text" name='groupe' placeholder='Chercher un groupe')
         .modal-footer
           button.btn.btn-light(type='button' data-dismiss='modal') Fermer
           button.btn.btn-success(type='submit') Enregistrer

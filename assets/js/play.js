@@ -46,12 +46,12 @@ $(function () {
                 y_debut = JSON.parse(json.y_debut);
                 y_fin = JSON.parse(json.y_fin);
                 num = legendes.length;
-                $(`#matiere option:selected`).attr('selected', 'false');
+                /* $(`#matiere option:selected`).attr('selected', 'false');
                 $(`#matiere option[value="${json.id_matiere}"]`).attr('selected', 'true');
                 $(`#visibilite option:selected`).attr('selected', 'false');
-                $(`#visibilite option[value="${json.schema_public}"]`).attr('selected', 'true');
+                $(`#visibilite option[value="${json.schema_public}"]`).attr('selected', 'true'); */
                 showImg().then(retracer);
-                $('#titre').val(json.nom_schema);
+                $('#titre').val(json.nom_schema); // à voir pour mettre le titre du schéma
 
                 aleatoire = new Array(num + fake.length);
                 for (let i = 0; i < aleatoire.length; i++) {
@@ -116,7 +116,8 @@ $(function () {
 
     $('#valider').on('submit', (e) => {
         e.preventDefault();
-
+        // reactualiser couleur reponse
+        $('.reponse_ligne').css('border-color':'');
         let i = 0;
         let dejaVu = [];
         let correct = [];
@@ -138,11 +139,7 @@ $(function () {
             if (aleatoire[i] == reponse) {
                 correct.push($(this));
             } else {
-                if (reponse == "") {
-                    if (aleatoire[i] <= num) {
-                        incorrect.push($(this));
-                    }
-                } else {
+                if (reponse != "") {
                     incorrect.push($(this));
                 }
             }
