@@ -39,7 +39,7 @@ head
                     th Nom
                     th Nombre d'utilisateurs
                     th Nombre de schémas
-                    if user.permissions.includes("manage_matieres")
+                    if user.permissions.includes("create_matiere")
                       th Actions
                 tbody
                   each val, index in matieres 
@@ -48,7 +48,7 @@ head
                         a(href="/schemas?id_matiere="+val.id_matiere) #{val.nom_matiere}
                       td #{val.nombre} 
                       td #{val.nb_schemas}
-                      if user.permissions.includes("manage_matieres")
+                      if user.permissions.includes("create_matiere")
                         td.text-left(style='padding: 8px;')
                           button.openModalEdit.btn.btn-primary.btn-sm(type='button' data-toggle="modal" data-target="#modalEdit" style='padding: 2px 4px;')
                             i.fas.fa-pen

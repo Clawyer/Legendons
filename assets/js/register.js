@@ -4,12 +4,10 @@ $(function () {
     $('#register').on('submit', e => {
         e.preventDefault();
         var isValid = $('#register')[0].checkValidity();
-        if ($('#passwordrepeat').val() !== $('#password').val())
-        {
+        if ($('#passwordrepeat').val() !== $('#password').val()) {
             $('#alert-location').prepend(alert);
             return;
         }
-            
         $('#register').addClass('was-validated');
         if (isValid) {
             $.post('/register', {
