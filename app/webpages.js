@@ -10,6 +10,7 @@ const {Client} = require('pg');
 module.exports = function (app, pgsql, dirname, cookies) {
 
     /**
+     * Retourne l'utilisateur dans la base de données avec ses permissions
      * @param {String} email
      * @returns {Promise<[]>}
      */
@@ -100,7 +101,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
 												WHERE EMAIL ='${cookies.get(req.cookies.user)}')
 										ORDER BY nom_matiere `)
                             .then(data => {
-                                renderData['matieres'] = data.rows
+                                renderData.matieres = data.rows
                             })
                         pgsql.query(`SELECT * FROM (
                                 SELECT G.id_groupe AS id_groupe, nom_groupe, COUNT(email) AS nombre FROM est_relie E

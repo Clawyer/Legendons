@@ -5,6 +5,7 @@ const {
     Client
 } = require('pg');
 
+// Connexion à la base
 const pgsql = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {

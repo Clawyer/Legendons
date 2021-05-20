@@ -38,14 +38,14 @@ head
                                     tr
                                         th Nom
                                         th Nombre d'utilisateurs
-                                        if user.permissions.includes("manage_groups")
+                                        if user.permissions.includes("create_group")
                                             th Actions
                                 tbody
                                     each val, index in groupes
                                         tr(id_groupe=val.id_groupe id="row-" + index)
                                             td #{val.nom_groupe}
                                             td #{val.nombre}
-                                            if user.permissions.includes("manage_groups")
+                                            if user.permissions.includes("create_group")
                                                 td.text-left(style='padding: 8px;')
                                                     button.openModalEdit.btn.btn-primary.btn-sm(type='button' data-toggle="modal" data-target="#modalEdit" style='padding: 2px 4px;')
                                                         i.fas.fa-pen

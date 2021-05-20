@@ -33,7 +33,9 @@ module.exports = function (app, pgsql, dirname, cookies) {
     });
     app.get('/listeGroupes', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
-            pgsql.query('SELECT id_groupe, nom_groupe FROM groupe')
+            pgsql.query(`SELECT G.id_groupe, G.nom_groupe
+            FROM groupe G NATURAL JOIN est_relie
+            WHERE email = '${cookies.get(req.cookies.user)}'`)
                 .then(data => {
                     res.json({
                         data: data.rows,

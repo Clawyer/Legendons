@@ -38,7 +38,7 @@ head
                     th Nom
                     th Matière
                     th Visibilité
-                    if user.permissions.includes("manage_matieres")
+                    if user.permissions.includes("create_schema")
                       th Actions
                 tbody
                   each val, index in schemas
@@ -50,7 +50,7 @@ head
                         td Public
                       else
                         td Privé
-                      if user.permissions.includes("manage_matieres")
+                      if user.permissions.includes("create_schema")
                         td.text-left(style='padding: 8px;')
                           if user.email === val.email
                             a.btn.btn-primary.btn-sm(role='button' href='/schema_create?id=' + val.id_schema style='padding: 2px 4px;')
