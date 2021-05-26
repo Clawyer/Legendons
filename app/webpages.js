@@ -326,4 +326,56 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.redirect('/');
         }
     });
+    app.get('/evaluations', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            resolveUser(cookies.get(req.cookies.user))
+                .then(data => {
+                    if (data) {
+                        let renderData = {
+                            user: data,
+                            page: 'evaluations'
+                        }
+                        pgsql.query(`
+                            SELECT NOM_EVAL,
+                            ID_EVAL,
+                            NOM_MATIERE,
+                            to_char(date_start, 'DD/MM/YYYY hh24:mi') as date_start,
+                            to_char(date_end, 'DD/MM/YYYY hh24:mi') as date_end,
+                            nb_schemas
+                        FROM EVALUATION E
+                        NATURAL JOIN SITUE S
+                        NATURAL LEFT JOIN MATIERE M
+                        WHERE M.ID_MATIERE IN
+                                (SELECT ID_MATIERE
+                                    FROM EST_COMPRIS_DANS E
+                                    NATURAL JOIN EST_RELIE ES
+                                    UNION SELECT ID_MATIERE
+                                    FROM APPARTENIR A
+                                    WHERE EMAIL = '${cookies.get(req.cookies.user)}')
+                        GROUP BY E.NOM_EVAL,
+                            ID_EVAL,
+                            NOM_MATIERE,
+                            date_start,
+                            date_end`)
+                            .then(data => {
+                                renderData['evaluations'] = data.rows
+                                res.render('evaluations', renderData);
+                            })
+                            .catch(err => {
+
+                                console.error(err);
+                                res.status(500);
+                            });
+                    } else
+                        res.redirect('/');
+                })
+                .catch(err => {
+                    console.error(err);
+                    res.status(500);
+                });
+
+        } else {
+            res.redirect('/');
+        }
+    });
 }

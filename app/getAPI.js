@@ -130,5 +130,187 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.status(401)
     });
 
+    app.get('/evaluation' , (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            pgsql.query(`
+                         SELECT NOM_EVAL,
+                                ID_EVAL,
+                                NOM_MATIERE
+                            FROM EVALUATION E
+                            NATURAL JOIN SITUE S
+                            NATURAL LEFT JOIN MATIERE M
+                            WHERE (E.DATE_START < NOW()
+                                OR E.DATE_END <= NOW())
+                                AND M.ID_MATIERE IN
+                                    (SELECT ID_MATIERE
+                                        FROM EST_COMPRIS_DANS E
+                                        NATURAL JOIN EST_RELIE ES
+                                        UNION SELECT ID_MATIERE
+                                        FROM APPARTENIR A
+                                        WHERE EMAIL = '${cookies.get(req.cookies.user)}')
+                            GROUP BY E.NOM_EVAL,
+                                ID_EVAL,
+                                NOM_MATIERE`)
+                .then(data => {
+                    res.json({
+                        nom: data.rows[0].nom_eval,
+                        id: data.rows[0].id_eval,
+                        matiere: data.rows[0].id_matiere,
+                        eval: data.rows,
+                        user: cookies.get(req.cookies.user)
+                    });
+                })
+                .catch(err => {
+                    res.status(500);
+                    console.error(err);
+                });
+        } else
+            res.status(401)
+    });
+
+    app.get('/eval_prof' , (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            pgsql.query(`
+                        SELECT E.ID_EVAL,
+                            E.ID_MATIERE,
+                            E.NOM_EVAL,
+                            COUNT(EMAIL) AS NB_ETUD
+                        FROM
+                            (SELECT ID_EVAL,
+                                    EMAIL,
+                                    COUNT(ID_SCHEMA) AS NB
+                                FROM NOTE N
+                                GROUP BY EMAIL,
+                                    ID_EVAL
+                                HAVING ID_EVAL = ${req.query.id_eval}) T
+                        NATURAL JOIN EVALUATION E
+                        WHERE NB in
+                                (SELECT COUNT(ID_SCHEMA)
+                                    FROM LISTE_SCHEMAS
+                                    WHERE ID_EVAL = ${req.query.id_eval})
+                        AND ID_MATIERE IN
+                                (SELECT ID_MATIERE
+                                    FROM EST_COMPRIS_DANS E
+                                    NATURAL JOIN EST_RELIE ES
+                                    UNION SELECT ID_MATIERE
+                                    FROM APPARTENIR A
+                                    WHERE EMAIL = '${cookies.get(req.cookies.user)}')
+                        GROUP BY E.ID_EVAL`)
+                .then(data => {
+                    res.json({
+                        nom: data.rows[0].nom_eval,
+                        id: data.rows[0].id_eval,
+                        matiere: data.rows[0].id_matiere,
+                        nb: data.rows[0].nb_etud,
+                        users: data.rows,
+                        user: cookies.get(req.cookies.user)
+                    });
+                })
+                .catch(err => {
+                    res.status(500);
+                    console.error(err);
+                });
+        } else
+            res.status(401)
+    });
+
+    app.get('/eval_etud' , (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            pgsql.query(`
+                        SELECT E.NOM_EVAL,
+                            ID_EVAL,
+                            N.ID_SCHEMA,
+                            S.NOM_SCHEMA,
+                            NOTE_EVAL,
+                            NOM_MATIERE
+                        FROM NOTE N
+                        NATURAL JOIN EVALUATION E
+                        INNER JOIN SCHEMA S ON S.ID_SCHEMA = N.ID_SCHEMA
+                        INNER JOIN MATIERE M ON M.ID_MATIERE = S.ID_MATIERE
+                        WHERE (N.EMAIL = '${cookies.get(req.cookies.user)}'
+                            AND E.DATE_START < NOW()
+                            OR E.DATE_END <= NOW())
+                            AND M.ID_MATIERE IN
+                                (SELECT ID_MATIERE
+                                    FROM EST_COMPRIS_DANS E
+                                    NATURAL JOIN EST_RELIE ES
+                                    UNION SELECT ID_MATIERE
+                                    FROM APPARTENIR A
+                                    WHERE EMAIL = '${cookies.get(req.cookies.user)}')
+                        GROUP BY E.NOM_EVAL,
+                            ID_EVAL,
+                            NOTE_EVAL,
+                            N.ID_SCHEMA,
+                            S.NOM_SCHEMA,
+                            NOM_MATIERE`)
+                .then(data => {
+                    res.json({
+                        nom: data.rows[0].nom_eval,
+                        id: data.rows[0].id_eval,
+                        matiere: data.rows[0].nom_matiere,
+                        schema: data.rows[0].nom_schema,
+                        notes: data.rows,
+                        user: cookies.get(req.cookies.user)
+                    });
+                })
+                .catch(err => {
+                    res.status(500);
+                    console.error(err);
+                });
+        } else
+            res.status(401)
+    });
+
+    app.get('/listeMats' , (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            pgsql.query(`
+                        SELECT ID_MATIERE,
+                        NOM_MATIERE
+                        FROM MATIERE M
+                        WHERE ID_MATIERE in
+                        (SELECT ID_MATIERE
+                        FROM EST_COMPRIS_DANS E
+                        NATURAL JOIN EST_RELIE ES
+                        UNION SELECT ID_MATIERE
+                        FROM APPARTENIR A
+                        WHERE EMAIL = '${cookies.get(req.cookies.user)}')`)
+                .then(data => {
+                    console.log(data)
+                    res.json({
+                        data: data.rows,
+                        user: cookies.get(req.cookies.user)
+                    });
+                })
+                .catch(err => {
+                    res.status(500);
+                    console.error(err);
+                });
+        } else
+            res.status(401)
+    });
+    app.get('/listeSchemas' , (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            pgsql.query(`
+                        SELECT
+                        ID_SCHEMA,
+                        NOM_SCHEMA,
+                        SCHEMA_PUBLIC
+                        FROM SCHEMA 
+                        WHERE ID_MATIERE ='${req.query.matiere}'`)
+                .then(data => {
+                    console.log(data)
+                    res.json({
+                        data: data.rows,
+                        user: cookies.get(req.cookies.user)
+                    });
+                })
+                .catch(err => {
+                    res.status(500);
+                    console.error(err);
+                });
+        } else
+            res.status(401)
+    });
+
 
 }

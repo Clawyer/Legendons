@@ -91,298 +91,175 @@ $(function () {
     });
 
 
-    var liste = [];
-    var gliste = []
-    var listeTemp = []
-    var groupeTemp = [];
-    var etudiants = new Set();
-    var groupes = new Set();
-    var anciensEtudiants = new Set();
-    var anciensGroupes = new Set();
+    var liste_mat = [];
+    var liste_sch = []
+    var listeTemp_M = []
+    var listeTemp_S = [];
+    var liste_coef = [];
+    var schemas = new Set();
+    var matieres = new Set();
+    var anciennesMat = new Set();
+    var anciensSch = new Set();
     var idEdit;
     var idDelete;
-    // json = { data = { list des users}}
-    $.get('/listeComptes')
-        .done(json => {
-            json.data.forEach(user => {
-                if (user.email != json.user)
-                    liste.push({
-                        label: `${user.prenom} ${user.nom}`,
-                        value: `${user.email}`
-                    });
-            });
-            $(".listeEtudiants").autocomplete('option', 'source', liste)
-            //option: json, list
-            listeTemp = Array.from(liste);
-        })
-        .fail(xhr => {
-            console.error(xhr);
-        });
 
-    $.get('/listeGroupes')
+    $.get('/listeMats')
         .done(json => {
             json.data.forEach(user => {
                 if (user.email != json.user)
-                    gliste.push({
-                        label: `${user.nom_groupe}`,
-                        value: `${user.id_groupe}`
+                    liste_mat.push({
+                        label: `${user.nom_matiere}`,
+                        value: `${user.id_matiere}`
                     });
             });
-            $(".listeGroupes").autocomplete('option', 'source', liste)
-            //option: json, list
-            groupeTemp = Array.from(gliste);
+            $(".listeMats").autocomplete('option', 'source', liste_mat)
+            listeTemp_M = Array.from(liste_mat);
         })
         .fail(xhr => {
             console.error(xhr);
         });
 
     $('.openModalCreate').on('click', e => {
-        listeTemp = Array.from(liste);
-        groupeTemp = Array.from(gliste);
-        $(".listeEtudiants").autocomplete('option', {
-            'source': listeTemp
+        listeTemp_M = Array.from(liste_mat);
+        $(".listeMats").autocomplete('option', {
+            'source': listeTemp_M
         });
-        $(".listeGroupes").autocomplete('option', {
-            'source': groupeTemp
+        $('#dateEvalCreateD').datetimepicker({
+            format: 'yyyy-mm-dd hh:ii',
+            locale: 'fr',
+            language: 'fr'
         });
-        $('#listeEtudiantsOnCreate').html('');
-        $('#listeGroupesOnCreate').html('');
-        $('#createMatiere input').val('');
-        etudiants = new Set();
-        groupes = new Set();
+        $('#dateEvalCreateF').datetimepicker({
+            format: 'yyyy-mm-dd hh:ii',
+            locale: 'fr',
+            language: 'fr'
+        });
+        $('#listeMatsOnCreate').html('');
+        $('#listeSchemasOnCreate').html('');
+        $('#createEval input').val('');
+        schemas = new Set();
+        matieres = new Set();
     });
 
-    $('.openModalEdit').on('click', function (e) {
-        listeTemp = Array.from(liste);
-        groupeTemp = Array.from(gliste)
-        $(".listeEtudiants").autocomplete('option', {
-            'source': listeTemp
-        });
-        $(".listeGroupes").autocomplete('option', {
-            'source': groupeTemp
-        });
-        $('#listeEtudiantsOnEdit').html('');
-        $('#listeGroupesOnEdit').html('');
-        $('#editMatiere input').val('');
-
-        $.get('/matiere', {
-            matiere: $(this).parent().parent().attr('id_matiere')
-        })
-            .done(json => {
-                console.log(json);
-                $('#nomInputEdit').val(json.nom);
-                idEdit = json.id
-                json.users.forEach(user => {
-                    etudiants.add(user.email);
-                    anciensEtudiants.add(user.email);
-                    var suppr = $('<button>').addClass("btn btn-secondary btn-sm").attr('email', user.email).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(user.prenom + ' ' + user.nom + ' ').append($('<i>').addClass("fa fa-trash-o"));
-                    if (json.user == user.email)
-                        suppr.addClass('disabled')
-                    else {
-                        var index = listeTemp.map(val => {
-                            return val.value;
-                        }).indexOf(user.email);
-                        listeTemp.splice(index, 1); // etud deja add
-                        suppr.on('click', function (e) {
-                            var id = $(this).attr('email')
-                            var index = liste.map(val => {
-                                return val.value;
-                            }).indexOf(id);
-                            etudiants.delete(id);
-                            listeTemp.push(liste[index]);
-                            $(".listeEtudiants").autocomplete('option', { // remet à jour la recherche après del
-                                'source': listeTemp
-                            });
-                            $(this).remove(); //suppr de l'affichage
-                        });
-                    }
-                    $('#listeEtudiantsOnEdit').append(suppr);
-                });
-                $(".listeEtudiants").autocomplete('option', {
-                    'source': listeTemp
-                });
-
-            });
-        $.get('/matiere_groupe', {
-            matiere: $(this).parent().parent().attr('id_matiere')
-        })
-            .done(json => {
-                json.groupes.forEach(groupe => {
-                    groupes.add(groupe.id_groupe);
-                    anciensGroupes.add(groupe.id_groupe);
-                    var suppr_grp = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_groupe', groupe.id_groupe).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(groupe.nom_groupe + ' ').append($('<i>').addClass("fa fa-trash-o"));
-                    var index = groupeTemp.map(val => {
-                        return val.value;
-                    }).indexOf(groupe.id_groupe);
-                    groupeTemp.splice(index, 1); // groupe deja add
-                    suppr_grp.on('click', function (e) {
-                        var id = $(this).attr('id_groupe')
-                        var index = gliste.map(val => {
-                            return val.value;
-                        }).indexOf(parseInt(id));
-                        groupes.delete(parseInt(id));
-                        groupeTemp.push(gliste[index]);
-                        $(".listeGroupes").autocomplete('option', { // remet à jour la recherche après del
-                            'source': groupeTemp
-                        });
-                        $(this).remove(); //suppr de l'affichage
-                    });
-                    $('#listeGroupesOnEdit').append(suppr_grp);
-                });
-                $(".listeGroupes").autocomplete('option', {
-                    'source': groupeTemp
-                });
-            });
-    });
-    // bouton suppr matiere
-    $('.openModalDelete').on('click', function (e) {
-        console.log('click');
-        idDelete = $(this).parent().parent().attr('id_matiere');
-    });
-
-    $(".listeEtudiants")
+    $(".listeMats")
         .autocomplete({
-            minLength: 0, // a changer
-            source: liste,
+            minLength: 0,
+            source: liste_mat,
             focus: function (event, ui) {
                 $(this).val(ui.item.label);
                 return false;
             },
             select: function (event, ui) {
-                var index = listeTemp.map(val => {
+                var index = listeTemp_M.map(val => {
                     return val.value;
                 }).indexOf(ui.item.value);
-                etudiants.add(ui.item.value);
+                matieres.add(ui.item.value);
                 $(this).val("");
-                var suppr = $('<button>').addClass("btn btn-secondary btn-sm").attr('email', ui.item.value).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(ui.item.label + ' ').append($('<i>').addClass("fa fa-trash-o"));
+                var suppr = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_matiere', ui.item.value).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(ui.item.label + ' ').append($('<i>').addClass("fa fa-trash-o"));
                 suppr.on('click', function (e) {
-                    var id = $(this).attr('email')
-                    var index = liste.map(val => {
+                    var id = $(this).attr('id_matiere')
+                    var index = liste_mat.map(val => {
                         return val.value;
                     }).indexOf(id);
-                    etudiants.delete(id);
-                    listeTemp.push(liste[index]);
-                    $(".listeEtudiants").autocomplete('option', {
-                        'source': listeTemp
+                    matieres.delete(id);
+                    listeTemp_M.push(liste_mat[index]);
+                    $(".listeMats").autocomplete('option', {
+                        'source': listeTemp_M
                     });
                     $(this).remove();
                 });
-                listeTemp.splice(index, 1);
-                $(".listeEtudiants").autocomplete('option', {
-                    'source': listeTemp
+                listeTemp_S.splice(index, 1);
+                $(".listeMats").autocomplete('option', {
+                    'source': listeTemp_S
                 });
-                console.log(suppr);
-                $('#listeEtudiantsOnCreate').append(suppr.clone(true));
-                $('#listeEtudiantsOnEdit').append(suppr);
+                $.get('/listeSchemas', {
+                    matiere: suppr.attr('id_matiere')
+                }).done(json => {
+                    json.data.forEach(schema => {
+                        liste_sch.push({
+                            label: `${schema.nom_schema}`,
+                            value: `${schema.id_schema}`
+                        });
+                    });
+                    listeTemp_S = Array.from(liste_sch);
+                    $(".listeSchemas").autocomplete('option', 'source', liste_sch)
+                    listeTemp_S = Array.from(liste_sch);
+                })
+                    .fail(xhr => {
+                        console.error(xhr);
+                    });
+                $('#listeMatsOnCreate').append(suppr.clone(true));
                 return false;
+
             }
         });
 
-    $(".listeGroupes")
+
+    $(".listeSchemas")
         .autocomplete({
-            minLength: 0, // a changer
-            source: gliste,
+            minLength: 0,
+            source: liste_sch,
             focus: function (event, ui) {
                 $(this).val(ui.item.label);
                 return false;
             },
             select: function (event, ui) {
-                var index = groupeTemp.map(val => {
+                var index = listeTemp_S.map(val => {
                     return val.value;
                 }).indexOf(ui.item.value);
-                groupes.add(ui.item.value);
+                schemas.add(ui.item.value);
                 $(this).val("");
-                var suppr = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_groupe', ui.item.value).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(ui.item.label + ' ').append($('<i>').addClass("fa fa-trash-o"));
+                var suppr = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_schema', ui.item.value).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(ui.item.label + ' ').append($('<i>').addClass("fa fa-trash-o"));
+                var div1 = $('<div>').addClass("form-group row schema"+ui.item.value).appendTo($('#coef'));
+                var div2 = $('<div>').addClass("col-4 mb-3 mb-sm-0").appendTo(div1);
+                $('<label>').addClass("col-form-label").text("Coefficient "+ui.item.label).appendTo(div2);
+                var div3 = $('<div>').addClass("col").appendTo(div1);
+                $('<input>').addClass("orm-control form-control-user listeCoef").attr("id","CoefCreate"+ui.item.value).attr('type',"number").attr("placeholder",1.00).attr("step",0.01).attr("min",0).attr("max",10).attr('required',"required").attr("maxLength",30).appendTo(div3)
                 suppr.on('click', function (e) {
-                    var id = $(this).attr('id_groupe')
-                    var index = gliste.map(val => {
+                    var id = $(this).attr('id_schema')
+                    $('.schema'+id).remove();
+                    var index = liste_sch.map(val => {
                         return val.value;
                     }).indexOf(id);
-                    groupes.delete(id);
-                    groupeTemp.push(gliste[index]); // Rajout element select de recherche
-                    $(".listeGroupes").autocomplete('option', {
-                        'source': groupeTemp
+                    schemas.delete(id);
+                    listeTemp_S.push(liste_sch[index]);
+                    $(".listeMats").autocomplete('option', {
+                        'source': listeTemp_S
                     });
                     $(this).remove();
                 });
-                groupeTemp.splice(index, 1); // Suppr element selectionné de la recherche
-                $(".listeGroupes").autocomplete('option', {
-                    'source': groupeTemp
+                listeTemp_S.splice(index, 1);
+                $(".listeSchemas").autocomplete('option', {
+                    'source': listeTemp_S
                 });
-                console.log(suppr);
-                $('#listeGroupesOnCreate').append(suppr.clone(true));
-                $('#listeGroupesOnEdit').append(suppr);
+                $('#listeSchemasOnCreate').append(suppr.clone(true));
                 return false;
             }
         });
 
-
-    $('#createMatiere').on('submit', e => {
+    $('#createEval').on('submit', e => {
         e.preventDefault();
-        console.log(etudiants);
-        $.post('/ajoutMatiere', {
+        $("#coef").find("input").each(function() {
+            var label = $(this).attr('id').slice(10);
+            liste_coef.push(parseInt($(this).val()));
+        });
+        console.log(liste_coef)
+        $.post('/ajoutEval', {
             nom: $('#nomInputCreate').val(),
-            liste: Array.from(etudiants),
-            gliste: Array.from(groupes)
+            matiere: parseInt(Array.from(matieres)[0]),
+            schemas: Array.from(schemas),
+            nb: schemas.size,
+            date_deb: $('#dateEvalCreateD').val(),
+            date_fin: $('#dateEvalCreateF').val(),
+            coef: liste_coef
+        }).done(msg => {
+            window.location.reload();
+        }).fail(xhr => {
+            console.error(xhr);
         })
-            .done(msg => {
-                window.location.reload();
-            })
-            .fail(xhr => {
-                console.error(xhr);
-            })
+
+
     })
 
-    $('#editMatiere').on('submit', e => {
-        e.preventDefault();
-        var supprimer = new Set();
-        var ajouter = new Set();
-        var supprimer_g = new Set();
-        var ajouter_g = new Set();
 
-        etudiants.forEach(etudiant => {
-            if (!anciensEtudiants.has(etudiant))
-                ajouter.add(etudiant);
-        });
-        anciensEtudiants.forEach(etudiant => {
-            if (!etudiants.has(etudiant))
-                supprimer.add(etudiant);
-        });
-        anciensGroupes.forEach(groupe => {
-            if (!groupes.has(groupe))
-                supprimer_g.add(groupe);
-        });
-        groupes.forEach(groupe => {
-            if (!anciensGroupes.has(groupe))
-                ajouter_g.add(groupe);
-        });
-
-
-        $.post('/editMatiere', {
-            nom: $('#nomInputEdit').val(),
-            id: idEdit,
-            ajouter: Array.from(ajouter),
-            supprimer: Array.from(supprimer),
-            ajouter_g: Array.from(ajouter_g),
-            supprimer_g: Array.from(supprimer_g)
-        })
-            .done(msg => {
-                window.location.reload();
-            })
-            .fail(xhr => {
-                console.error(xhr);
-            });
-    });
-    // suppr def
-    $('#deleteMatiere').on('click', e => {
-        $.post('/deleteMatiere', {
-            matiere: idDelete
-        })
-            .done(msg => {
-                window.location.reload();
-            })
-            .fail(xhr => {
-                console.error(xhr);
-            });
-    });
 });

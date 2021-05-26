@@ -474,4 +474,48 @@ module.exports = function (app, pgsql, dirname, cookies) {
         } else
             res.status(401);
     })
+    app.post('/ajoutEval', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            hasPermission(cookies.get(req.cookies.user), 'create_eval')
+                .then(() => {
+                    let nom = req.body.nom;
+                    let mat = req.body.matiere;
+                    let nb = req.body.nb;
+                    let schemas = req.body.schemas;
+                    let coef = req.body.coef;
+                    let date_deb = req.body.date_deb;
+                    let date_fin = req.body.date_fin;
+                    nom = nom.replace("'", "''");
+                    pgsql.query(`INSERT INTO evaluation(nom_eval, nb_schemas, id_matiere, date_start, date_end) VALUES ('${nom}',${nb},'${mat}','${date_deb}','${date_fin}') RETURNING id_eval`)
+                        .then(data => {
+                            const id = data.rows[0].id_eval;
+                            let query = `INSERT INTO liste_schemas(id_eval,id_schema,coefficient) VALUES `;
+                            if (schemas && coef)
+                                for ( var i = 0, l = schemas.length; i < l; i++ ) {
+                                    query += `(${id}, ${schemas[i]}, ${coef[i]}),`;
+                                }
+                            query = query.slice(0, -1);
+                            pgsql.query(query)
+                            let query2 = `INSERT INTO situe(id_eval,id_matiere) VALUES (${id},${mat}) `;
+                            pgsql.query(query)
+                            pgsql.query(query2)
+                                .then(() => {
+                                    res.send("Ok");
+                                })
+                                .catch(err => {
+                                    res.sendStatus(500);
+                                    console.error(err);
+                                });
+                        })
+                        .catch(err => {
+                            res.sendStatus(500);
+                            console.error(err);
+                        });
+                }).catch(err => {
+                console.error(err);
+                res.status(501);
+            });
+        } else
+            res.status(501);
+    });
 }
