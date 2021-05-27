@@ -130,33 +130,42 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.status(401)
     });
 
-    app.get('/evaluation' , (req, res) => {
+    app.get('/evaluation', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             pgsql.query(`
-                         SELECT NOM_EVAL,
-                                ID_EVAL,
-                                NOM_MATIERE
-                            FROM EVALUATION E
-                            NATURAL JOIN SITUE S
-                            NATURAL LEFT JOIN MATIERE M
-                            WHERE (E.DATE_START < NOW()
-                                OR E.DATE_END <= NOW())
-                                AND M.ID_MATIERE IN
-                                    (SELECT ID_MATIERE
-                                        FROM EST_COMPRIS_DANS E
-                                        NATURAL JOIN EST_RELIE ES
-                                        UNION SELECT ID_MATIERE
-                                        FROM APPARTENIR A
-                                        WHERE EMAIL = '${cookies.get(req.cookies.user)}')
-                            GROUP BY E.NOM_EVAL,
-                                ID_EVAL,
-                                NOM_MATIERE`)
+                        SELECT NOM_EVAL,
+                        ID_EVAL,
+                        NOM_MATIERE,
+                        M.ID_MATIERE,
+                        to_char(date_start, 'yyyy/mm/dd hh24:mi') as date_start,
+                        to_char(date_end, 'yyyy/mm/dd hh24:mi') as date_end,
+                        Sc.nom_schema,
+                        Sc.id_schema,
+                        L.coefficient
+                        FROM EVALUATION E
+                        NATURAL JOIN SITUE S
+                        NATURAL LEFT JOIN MATIERE M
+                        NATURAL JOIN liste_schemas L
+                        INNER JOIN SCHEMA Sc ON Sc.id_schema = L.id_schema
+                        WHERE E.ID_EVAL = ${req.query.eval}
+                        GROUP BY E.NOM_EVAL,
+                        ID_EVAL,
+                        NOM_MATIERE,
+                        date_start,
+                        date_end,
+                        Sc.nom_schema,
+                        M.ID_MATIERE,
+                        Sc.id_schema,
+                        L.coefficient`)
                 .then(data => {
                     res.json({
                         nom: data.rows[0].nom_eval,
                         id: data.rows[0].id_eval,
-                        matiere: data.rows[0].id_matiere,
-                        eval: data.rows,
+                        mat: data.rows[0].nom_matiere,
+                        id_mat : data.rows[0].id_matiere,
+                        deb: data.rows[0].date_start,
+                        fin: data.rows[0].date_end,
+                        schemas: data.rows,
                         user: cookies.get(req.cookies.user)
                     });
                 })
@@ -168,7 +177,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.status(401)
     });
 
-    app.get('/eval_prof' , (req, res) => {
+    /*app.get('/eval_prof', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             pgsql.query(`
                         SELECT E.ID_EVAL,
@@ -214,7 +223,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.status(401)
     });
 
-    app.get('/eval_etud' , (req, res) => {
+    app.get('/eval_etud', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             pgsql.query(`
                         SELECT E.NOM_EVAL,
@@ -259,9 +268,9 @@ module.exports = function (app, pgsql, dirname, cookies) {
                 });
         } else
             res.status(401)
-    });
+    });*/
 
-    app.get('/listeMats' , (req, res) => {
+    app.get('/listeMats', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             pgsql.query(`
                         SELECT ID_MATIERE,
@@ -288,7 +297,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
         } else
             res.status(401)
     });
-    app.get('/listeSchemas' , (req, res) => {
+    app.get('/listeSchemas', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             pgsql.query(`
                         SELECT

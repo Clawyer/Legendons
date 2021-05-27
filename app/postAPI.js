@@ -491,8 +491,9 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             const id = data.rows[0].id_eval;
                             let query = `INSERT INTO liste_schemas(id_eval,id_schema,coefficient) VALUES `;
                             if (schemas && coef)
-                                for ( var i = 0, l = schemas.length; i < l; i++ ) {
-                                    query += `(${id}, ${schemas[i]}, ${coef[i]}),`;
+                                for (var i = 0, l = schemas.length; i < l; i++) {
+                                    if (schemas[i] === coef[i].label)
+                                        query += `(${id}, ${schemas[i]}, ${coef[i].value}),`;
                                 }
                             query = query.slice(0, -1);
                             pgsql.query(query)
@@ -517,5 +518,68 @@ module.exports = function (app, pgsql, dirname, cookies) {
             });
         } else
             res.status(501);
+    });
+
+    app.post('/editEval', (req, res) => {
+        let query;
+        let query2;
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            hasPermission(cookies.get(req.cookies.user), 'create_eval')
+                .then(() => {
+                    let nom = req.body.nom;
+                    let deb = req.body.deb;
+                    let fin = req.body.fin;
+                    nom = nom.replace("'", "''");
+                    const id = req.body.id;
+                    pgsql.query(`UPDATE evaluation SET nom_eval='${nom}', date_start = '${deb}', date_end = '${fin}' WHERE id_eval = ${id}`)
+                        .then(() => {
+                            res.send("Ok")
+                        })
+                        .catch(err => {
+                            console.error(err);
+                        });
+                    if (req.body.ajouter_s) {
+                        query = `INSERT INTO liste_schemas(id_eval, id_schema, coefficient) VALUES `;
+                        for (var i = 0, l = req.body.ajouter_s.length; i < l; i++) {
+                            if (req.body.ajouter_s[i] === req.body.ajouter_coef[i].label)
+                                query += `(${id}, ${req.body.ajouter_s[i]}, ${req.body.ajouter_coef[i].value}),`;
+                        }
+                        query = query.slice(0, -1);
+                        pgsql.query(query)
+                            .catch(err => {
+                                console.error(err);
+                            });
+                    }
+                    if (req.body.ajouter_coef) {
+                        for (var i = 0, l = req.body.ajouter_coef.length; i < l; i++) {
+                            query = `UPDATE liste_schemas SET coefficient = ${req.body.ajouter_coef[i].value} WHERE id_schema = ${req.body.ajouter_coef[i].label}`;
+                            pgsql.query(query)
+                                .catch(err => {
+                                    console.error(err);
+                                });
+                        }
+                    }
+                    if (req.body.supprimer_s) {
+                        query = `DELETE FROM liste_schemas WHERE id_eval = ${id} AND id_schema IN (`;
+                        req.body.supprimer_s.forEach(sch => {
+                            query += `'${sch}',`
+                        });
+                        query = query.slice(0, -1) + ')'
+                        query2 = `UPDATE evaluation SET nb_schemas=(SELECT COUNT(id_schema)
+                                    from liste_schemas 
+                                    WHERE ID_EVAL =  ${id}) 
+                                    WHERE id_eval = ${id}`;
+                        pgsql.query(query)
+                        pgsql.query(query2)
+                            .catch(err => {
+                                console.error(err);
+                            });
+                    }
+                }).catch(err => {
+                console.error(err);
+                res.status(501);
+            });
+        } else
+            res.status(401);
     });
 }
