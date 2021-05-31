@@ -245,7 +245,6 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             user: data,
                             page: 'schemas'
                         }
-//changer schema compte
                         pgsql.query(`SELECT DISTINCT id_schema, nom_schema, nom_matiere, schema_public, S.email
                             FROM schema S NATURAL JOIN matiere M
                             JOIN appartenir A ON A.id_matiere=M.id_matiere
@@ -326,6 +325,42 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.redirect('/');
         }
     });
+
+
+    app.get('/schemas_eval', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            resolveUser(cookies.get(req.cookies.user))
+                .then(data => {
+                    if (data) {
+                        let renderData = {
+                            user: data,
+                            page: 'schemas_eval'
+                        }
+                        pgsql.query(`SELECT id_schema, coefficient, nom_schema, S.schema_public, id_eval 
+                                            from liste_schemas
+                                            NATURAL JOIN SCHEMA S
+                                            where id_eval = ${req.query.id_eval} `)
+                            .then(data => {
+                                renderData['schemas_eval'] = data.rows
+                                res.render('schemas_eval', renderData);
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                res.status(500);
+                            });
+                    } else
+                        res.redirect('/');
+                })
+                .catch(err => {
+                    console.error(err);
+                    res.status(500);
+                });
+
+        } else {
+            res.redirect('/');
+        }
+    });
+
     app.get('/evaluations', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             resolveUser(cookies.get(req.cookies.user))

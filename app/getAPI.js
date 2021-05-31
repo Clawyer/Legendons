@@ -321,5 +321,23 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.status(401)
     });
 
+    // app.get('/countdown', (req, res) => {
+    //     if (req.cookies.user && cookies.has(req.cookies.user)) {
+    //         pgsql.query(`SELECT date_end FROM Evaluation
+    //         WHERE id_eval=${req.query.eval}`)
+    //             .then(data => {
+    //                 res.json({
+    //                     date: data.rows,
+    //                     user: cookies.get(req.cookies.user)
+    //                 });
+    //             })
+    //             .catch(err => {
+    //                 res.status(500);
+    //                 console.error(err);
+    //             });
+    //     } else
+    //         res.status(401)
+    // });
+
 
 }

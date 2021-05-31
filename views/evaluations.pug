@@ -45,7 +45,8 @@ head
                                 tbody
                                     each val, index in evaluations
                                         tr(id_eval=val.id_eval id="row-" + index)
-                                            td #{val.nom_eval}
+                                            td
+                                                a(href="/schemas_eval?id_eval=" + val.id_eval) #{val.nom_eval}
                                             td #{val.nom_matiere}
                                             td #{val.nb_schemas}
                                             td #{val.date_start}
@@ -64,6 +65,19 @@ head
                                     ul.pagination
         include includes/footer
     include includes/pagetop
+#modalStart.modal.fade(role='dialog' tabindex='-1')
+    .modal-dialog.modal-sm(role='document')
+        .modal-content
+            .modal-header
+                button.close(type='button' data-dismiss='modal' aria-label='Fermer')
+                    span(aria-hidden='true') &times;
+            .modal-body.ui-front
+                .p-4.text-center
+                    p Voulez-vous commencer ?
+                #countdown.row.justify-content-center.border.rounded-pill
+            .modal-footer
+                button.btn.btn-light(type='button' data-dismiss='modal') Non
+                button.btn.btn-light(type='button' data-dismiss='modal') Oui
 #modalCreate.modal.fade(role='dialog' tabindex='-1')
     .modal-dialog.modal-lg(role='document')
         .modal-content

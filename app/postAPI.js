@@ -582,4 +582,18 @@ module.exports = function (app, pgsql, dirname, cookies) {
         } else
             res.status(401);
     });
+
+
+    app.post('/envoi_note', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            pgsql.query(`INSERT INTO Note (id_eval,email,note_eval,id_schema) VALUES (${req.body.id_eval},'${cookies.get(req.cookies.user)}', ${req.body.note},${req.body.id_schema})`)
+                .then(() => {
+                    res.send("Ok")
+                })
+                .catch(err => {
+                    console.error(err);
+                    res.status(500);
+                })
+        } else res.status(501);
+    });
 }

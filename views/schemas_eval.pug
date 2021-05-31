@@ -1,0 +1,76 @@
+doctype html
+head
+  title Evaluations - Schémas - L&eacute;gendons
+  include includes/head.pug
+#wrapper
+  include includes/navbar.pug
+  #content-wrapper.d-flex.flex-column
+    #content
+      include includes/header.pug
+      .container-fluid
+        .card.shadow
+          .card-header.py-3.d-sm-flex.justify-content-between.align-items-center.mb-4
+            p.text-primary.m-0.font-weight-bold Liste des schémas
+          .card-body
+            .row
+              .col-md-6.text-nowrap
+                #dataTable_length.dataTables_length(aria-controls='dataTable')
+                  label
+                    | Afficher&nbsp;
+                    select#affichage.form-control.form-control-sm.custom-select.custom-select-sm
+                      option(value='10' selected='') 10
+                      option(value='25') 25
+                      option(value='50') 50
+                      option(value='100') 100
+              .col-md-6
+                #dataTable_filter.text-md-right.dataTables_filter
+                  label
+                    input.form-control.form-control-sm(type='search' aria-controls='dataTable' placeholder='Rechercher')
+            .table-responsive.table.mt-2(role='grid' aria-describedby='dataTable_info')
+              table.table.my-0
+                thead
+                  tr
+                    th Nom
+                    th Coefficient
+                    th Visibilité
+                    if user.permissions.includes("create_schema")
+                      th Actions
+                tbody
+                  each val, index in schemas_eval
+                    tr(id_schema=val.id_schema id="row-" + index)
+                      td
+                        a(href="/play?id=" + val.id_schema + "?id_eval="+val.id_eval) #{val.nom_schema}
+                      td #{val.coefficient}
+                      if val.schema_public
+                        td Public
+                      else
+                        td Privé
+                      if user.permissions.includes("create_schema")
+                        td.text-left(style='padding: 8px;')
+                            a.btn.btn-primary.btn-sm(role='button' href='/schema_create?id=' + val.id_schema style='padding: 2px 4px;')
+                              i.fas.fa-pen
+                            button.openModalDelete.btn.btn-danger.btn-sm(type='button' data-toggle="modal" data-target="#modalDelete" style='padding: 2px 6px; margin-left: 2px;')
+                              i.fa.fa-trash
+            .row
+              .col-md-6.align-self-center
+                p#dataTable_info.dataTables_info(role='status' aria-live='polite')
+              .col-md-6
+                nav.d-lg-flex.justify-content-lg-end.dataTables_paginate.paging_simple_numbers
+                  ul.pagination
+    include includes/footer
+  include includes/pagetop
+#modalDelete.modal.fade(role='dialog' tabindex='-1')
+  .modal-dialog(role='document')
+    .modal-content
+      .modal-header
+        h5.modal-title Confirmer la suppression
+        button.close(type='button' data-dismiss='modal' aria-label='Fermer')
+          span(aria-hidden='true') &times;
+      .modal-body
+        | Souhaitez-vous vraiment supprimer ce schéma ?
+      .modal-footer
+        button.btn.btn-secondary(type='button' data-dismiss='modal') Annuler
+        button#deleteSchema.btn.btn-danger(type='button') Supprimer définitivement
+
+include includes/scripts
+script(src="/assets/js/schemas.js")

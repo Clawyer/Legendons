@@ -14,14 +14,20 @@ function shuffle(array) {
         array[currentIndex] = array[randomIndex];
         array[randomIndex] = temporaryValue;
     }
-
     return array;
 }
 
 
 $(function () {
     const urlParams = new URLSearchParams(window.location.search);
-    let id = urlParams.get('id');
+    let id_eval;
+
+    let ids = urlParams.get('id').split('?');
+    let id_schema = ids[0];
+    if (ids[1]) {
+        id_eval = ids[1].split('id_eval=')[1]
+    }
+    console.log(id_eval);
 
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
@@ -36,8 +42,8 @@ $(function () {
 
     let start = false;
 
-    if (id) {
-        $.get('/schema', {id: id})
+    if (id_schema) {
+        $.get('/schema', {id: id_schema})
             .done(json => {
                 let legendes = JSON.parse(json.legendes);
                 let fake = JSON.parse(json.fake) || [];
@@ -50,7 +56,7 @@ $(function () {
 
                 aleatoire = new Array(num + fake.length);
                 for (let i = 0; i < aleatoire.length; i++) {
-                    aleatoire[i] = i+1;
+                    aleatoire[i] = i + 1;
                 }
 
                 shuffle(aleatoire);
@@ -63,16 +69,16 @@ $(function () {
                     nouveau.append(b);
                     console.log(i);
                     if (i <= num) {
-                        nouveau.append($("<input type='text' disabled class='ligne_saisie' size='30' id='" + i + "'>").val(legendes[i-1]));
+                        nouveau.append($("<input type='text' disabled class='ligne_saisie' size='30' id='" + i + "'>").val(legendes[i - 1]));
                     } else {
-                        nouveau.append($("<input type='text' disabled class='ligne_saisie' size='30' id='" + i + "'>").val(fake[i-num-1]));
+                        nouveau.append($("<input type='text' disabled class='ligne_saisie' size='30' id='" + i + "'>").val(fake[i - num - 1]));
                     }
                 })
             });
     }
 
     function showImg() {
-        const url = "/image/" + id + '.jpg';
+        const url = "/image/" + id_schema + '.jpg';
 
         $("#img_import").remove();
 
@@ -111,14 +117,14 @@ $(function () {
 
     $('#valider').on('submit', (e) => {
         e.preventDefault();
-        // reactualiser couleur reponse
         $('.reponse_ligne').css('border-color', '')
-
         let i = 0;
         let dejaVu = [];
         let correct = [];
         let incorrect = [];
+        let note;
         let fini = true;
+
         $('.reponse_ligne').each(function () {
             let reponse = $(this).val();
 
@@ -141,23 +147,39 @@ $(function () {
             }
             i++;
         });
+        if (!id_eval) {
 
-        if (fini) {
-            incorrect.forEach(el => {
-                el.css('border-color', 'red');
-            });
-            correct.forEach(el => {
-                el.css('border-color', 'green');
-            });
+            if (fini) {
+                incorrect.forEach(el => {
+                    el.css('border-color', 'red');
+                });
+                correct.forEach(el => {
+                    el.css('border-color', 'green');
+                });
+                note = '' + correct.length + '/' + num + '';
 
-            if (correct.length == num && incorrect.length == 0) {
-                let valid = $('<p style="color: green;">Tout est correct ! Félicitations !</p>');
-                valid.insertAfter('#buttonValider');
-                setTimeout(() => {
-                    valid.remove();
-                }, 10000);
+                if (correct.length == num && incorrect.length == 0) {
+                    let valid = $('<p style="color: green;">Tout est correct ! Félicitations !</p>');
+                    valid.insertAfter('#buttonValider');
+                    setTimeout(() => {
+                        valid.remove();
+                    }, 10000);
+                }
+            }
+        } else {
+            if (fini) {
+                note = correct.length;
+                $.post('/envoi_note', {
+                    id_schema: id_schema,
+                    id_eval: id_eval,
+                    note: note,
+                }).done(msg => {
+                    window.location.href("/schemas_eval?id_eval="+id_eval);
+                }).fail(xhr => {
+                    console.error(xhr);
+                });
             }
         }
-    });
 
+    });
 });

@@ -231,6 +231,7 @@ $(function () {
                     });
                     $(this).remove();
                 });
+                console.log(liste_sch)
                 listeTemp_S.splice(index, 1);
                 $(".listeSchemas").autocomplete('option', {
                     'source': listeTemp_S
@@ -264,13 +265,16 @@ $(function () {
             console.error(xhr);
         })
     })
-
+// Problème sur les listes
     $('.openModalEdit').on('click', function (e) {
         listeTemp_M = Array.from(liste_mat);
         listeTemp_S = Array.from(liste_sch);
 
         $(".listeMats").autocomplete('option', {
             'source': listeTemp_M
+        });
+        $(".listeSchemas").autocomplete('option', {
+            'source': listeTemp_S
         });
         $('#dateEvalEditD').datetimepicker({
             format: 'yyyy/mm/dd hh:ii',
@@ -340,7 +344,6 @@ $(function () {
                 });
                 $('#listeSchemasOnEdit').append(suppr_sch);
                 var exist = $("#CoefEdit" + schema.id_schema);
-                console.log(exist)
                 if (!exist.length) {
                     var div1 = $('<div>').addClass("form-group row schema" + schema.id_schema).appendTo($('#coefonEdit'));
                     var div2 = $('<div>').addClass("col-4 mb-3 mb-sm-0").appendTo(div1);
@@ -418,7 +421,6 @@ $(function () {
                 else if (liste_coef[i].value !== anciensCoef[i].value)
                     ajouter_coef.push(liste_coef[i])
             }
-        console.log(ajouter_coef)
         $.post('/editEval', {
             nom: $('#nomInputEdit').val(),
             deb: $('#dateEvalEditD').val(),
@@ -438,6 +440,17 @@ $(function () {
                 console.error(xhr);
             });
     });
+
+    $("#dataTable").on('click', function(){
+        console.log($(this))
+    });
+    /*$('#clock').countdown(get15dayFromNow(), function(event) {
+        var $this = $(this).html(event.strftime(''
+            + '<span class="h1 font-weight-bold">%D</span> Day%!d'
+            + '<span class="h1 font-weight-bold">%H</span> Hr'
+            + '<span class="h1 font-weight-bold">%M</span> Min'));
+    });*/
+
 });
 
 
