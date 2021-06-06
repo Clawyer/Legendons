@@ -50,17 +50,17 @@ head
                         td Terminé
                       else
                         td
-                          a(href="/play?id=" + val.id_schema + "?id_eval=" + val.id_eval) #{val.nom_schema}
-                        td
                           a(href="/play?id=" + val.id_schema + "?id_eval=" + val.id_eval)
                             img(src='images/' + val.id_schema + '.jpg' alt='' style='width:200px; height:auto;')
+                        td
+                          a(href="/play?id=" + val.id_schema + "?id_eval=" + val.id_eval) #{val.nom_schema}
                         td En cours
                     else
                       td
-                        a(href="/play?id=" + val.id_schema) #{val.nom_schema}
-                      td
                         a(href="/play?id=" + val.id_schema)
-                          img(src='images/'+val.id_schema+'.jpg' alt='' style='width:200px; height:auto;')
+                          img(src='images/' + val.id_schema + '.jpg' alt='' style='width:200px; height:auto;')
+                      td
+                        a(href="/play?id=" + val.id_schema) #{val.nom_schema}
                       td #{val.coefficient}
                       if val.schema_public
                         td Public
