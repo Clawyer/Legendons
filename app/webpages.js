@@ -385,7 +385,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             SELECT NOM_EVAL,
                             ID_EVAL,
                             NOM_MATIERE,
-                            CASE WHEN (EXTRACT(EPOCH FROM (date_end -  NOW()))) > 0 then false else true END as Expire,
+                            CASE WHEN (EXTRACT(EPOCH FROM (DATE(date_end) -  NOW()))) > 0 then false else true END as Expire,
                             to_char(date_start, 'DD/MM/YYYY hh24:mi') as date_start,
                             to_char(date_end, 'DD/MM/YYYY hh24:mi') as date_end,
                             nb_schemas
@@ -435,16 +435,19 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             user: data,
                             page: 'notes_eval'
                         }
-                        pgsql.query(`SELECT
-                                        ID_EVAL,
+                            pgsql.query(`
+                                        SELECT
+                                        E.ID_EVAL,
                                         N.NOTE_EVAL,
                                         NOM_EVAL,
                                         S.ID_SCHEMA,
-                                        NOM_SCHEMA
+                                        NOM_SCHEMA,
+                                        coefficient
                                         FROM NOTE N
-                                        LEFT JOIN SCHEMA S ON S.id_schema = N.id_schema
                                         NATURAL JOIN EVALUATION E
-                                        WHERE ID_EVAL = ${req.query.id_eval} AND N.email = '${cookies.get(req.cookies.user)}'`)
+                                        NATURAL JOIN Liste_schemas L 
+                                        LEFT JOIN SCHEMA S ON S.id_schema = L.id_schema
+                                        WHERE E.ID_EVAL = ${req.query.id_eval} AND N.email = '${cookies.get(req.cookies.user)}'`)
                             .then(data => {
                                 renderData['notes_eval'] = data.rows
                                 res.render('notes_eval', renderData);
@@ -452,7 +455,6 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             })
                             .catch(err => {
                                 console.error(err);
-                                console.log('errore');
                                 res.status(500);
                             });
                     } else

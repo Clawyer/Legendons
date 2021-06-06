@@ -30,7 +30,6 @@ $(function () {
             .done(json => {
                 let deb = json.deb;
                 let fin = json.fin;
-                deb = new Date(deb);
                 fin = new Date(fin).getTime();
                 $('#timer').css('float','right');
                 var x = setInterval(function () {
@@ -50,6 +49,7 @@ $(function () {
                     if (distance < 0) {
                         clearInterval(x);
                         $('#time').text("Terminé");
+                        window.location.href = "/evaluations";
                     }
                 }, 1000);
             });
@@ -140,6 +140,10 @@ $(function () {
         }
     }
 
+    function convert(num,den,e) {
+        return (num * e) / den;
+    }
+
     $('#valider').on('submit', (e) => {
         e.preventDefault();
         $('.reponse_ligne').css('border-color', '')
@@ -152,7 +156,6 @@ $(function () {
 
         $('.reponse_ligne').each(function () {
             let reponse = $(this).val();
-
             if (dejaVu.includes(reponse)) {
                 let error = $('<p style="color: red;">Vous avez entré des valeurs en double ! Merci de rectifier.</p>');
                 error.insertAfter('#buttonValider');
@@ -193,13 +196,13 @@ $(function () {
             }
         } else {
             if (fini) {
-                note = correct.length;
+                note = convert(correct.length, num.length, 20);
                 $.post('/envoi_note', {
                     id_schema: id_schema,
                     id_eval: id_eval,
                     note: note,
                 }).done(msg => {
-                    window.location.reload();
+                    window.location.href = "/schema_eval?id_eval=" + id_eval;
                 }).fail(xhr => {
                     console.error(xhr);
                 });

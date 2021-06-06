@@ -51,35 +51,6 @@ $(function () {
             $('#next').removeClass('disabled');
     }
 
-
-    function initialisation() {
-        // On masque les lignes 11 à infini
-        for (let index = affichage; index < nombre; index++) {
-            $(`#row-${index}`).hide();
-        }
-
-        // On ajoute le nombre de pages en bas
-        $('ul.pagination').children().remove();
-
-        $('ul.pagination').first().append($('<li>').addClass('page-item disabled').on('click', changeNavigation).attr('id', 'previous').append($('<button>').addClass('page-link').attr('aria-label', 'Précédent').append($('<span>').attr('aria-hidden', 'true').text('«'))));
-
-        for (let index = 1; index <= pages; index++) {
-            var a = $('<button>').addClass('page-link').text(index);
-            var li = $('<li>').addClass('page-item').attr('id', 'page-' + index).append(a).on('click', changeNavigation);
-            if (index == 1) li.addClass('active');
-            $('ul.pagination').first().append(li);
-        }
-
-        $('ul.pagination').first().append($('<li>').addClass('page-item').on('click', changeNavigation).attr('id', 'next').append($('<button>').addClass('page-link').attr('aria-label', 'Suivant').append($('<span>').attr('aria-hidden', 'true').text('»'))));
-        if (pageEnCours >= pages)
-            $('#next').addClass('disabled');
-
-        $('#dataTable_info').text(`Affichage de ${(nombre == 0) ? "0" : "1"} à ${Math.min(nombre, affichage)} sur ${nombre}`);
-
-    }
-
-    initialisation();
-
     $('li.page-item')
 
     $('#affichage').on('change', e => {
@@ -89,4 +60,33 @@ $(function () {
         pageEnCours = 1;
         initialisation()
     });
+
+    function moyenne_ponderee(arrValues, arrWeights) {
+
+        var result = arrValues.map(function (value, i) {
+
+            var weight = arrWeights[i];
+            var sum = value * weight;
+
+            return [sum, weight];
+        }).reduce(function (p, c) {
+
+            return [p[0] + c[0], p[1] + c[1]];
+        }, [0, 0]);
+
+        return Math.round(result[0] / result[1] * 100) / 100
+    }
+
+    var notes = [];
+    var coef = [];
+    $("#dataTable tbody tr").each(function () {
+        coef.push(parseInt($(this).find('td').eq(1).text()));
+        notes.push(parseInt($(this).find('td').eq(2).text()));
+    });
+    coef.pop(),notes.pop();
+    var total = moyenne_ponderee(notes, coef);
+    console.log(total)
+    $('.total').text(total);
+
+
 });

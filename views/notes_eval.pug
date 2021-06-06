@@ -32,21 +32,20 @@ head
                                 thead
                                     tr
                                         th Schéma
+                                        th Coefficient
                                         th Note
                                 tbody
                                     if notes_eval.length === 0
-                                        td Vous n'avez aucunes notes
+                                        td Vous n'avez aucune note
                                     else
                                         each val, index in notes_eval
                                             tr(id_eval=val.id_eval id="row-" + index)
                                                 td #{val.nom_schema}
+                                                td #{val.coefficient}
                                                 td #{val.note_eval}
-                        .row
-                            .col-md-6.align-self-center
-                                p#dataTable_info.dataTables_info(role='status' aria-live='polite')
-                            .col-md-6
-                                nav.d-lg-flex.justify-content-lg-end.dataTables_paginate.paging_simple_numbers
-                                    ul.pagination
+                                        th Total
+                                            td
+                                            td.total.p.font-weight-bold
         include includes/footer
     include includes/pagetop
 include includes/scripts
