@@ -327,22 +327,33 @@ module.exports = function (app, pgsql, dirname, cookies) {
     });
 
 
-    app.get('/schemas_eval', (req, res) => {
+    app.get('/schema_eval', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             resolveUser(cookies.get(req.cookies.user))
                 .then(data => {
                     if (data) {
                         let renderData = {
                             user: data,
-                            page: 'schemas_eval'
+                            page: 'schema_eval'
                         }
-                        pgsql.query(`SELECT id_schema, coefficient, nom_schema, S.schema_public, id_eval 
-                                            from liste_schemas
+                        pgsql.query(`SELECT *, CASE WHEN ID_EVAL IN 
+                                            (SELECT
+                                            ID_EVAL 
+                                            FROM NOTE N
+                                            WHERE N.ID_EVAL = ${req.query.id_eval} AND N.id_schema = R.id_schema AND N.email = '${renderData.user.email}') THEN true ELSE false END as fini
+                                            FROM (SELECT 
+                                            ID_EVAL,
+                                            ID_SCHEMA,
+                                            COEFFICIENT,
+                                            NOM_SCHEMA
+                                            FROM LISTE_SCHEMAS
                                             NATURAL JOIN SCHEMA S
-                                            where id_eval = ${req.query.id_eval} `)
+                                            WHERE ID_EVAL =  ${req.query.id_eval}) R
+                                            NATURAL JOIN EVALUATION E`)
                             .then(data => {
-                                renderData['schemas_eval'] = data.rows
-                                res.render('schemas_eval', renderData);
+                                renderData['schema_eval'] = data.rows
+                                res.render('schema_eval', renderData);
+                                console.log(renderData)
                             })
                             .catch(err => {
                                 console.error(err);
@@ -374,6 +385,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             SELECT NOM_EVAL,
                             ID_EVAL,
                             NOM_MATIERE,
+                            CASE WHEN (EXTRACT(EPOCH FROM (date_end -  NOW()))) > 0 then false else true END as Expire,
                             to_char(date_start, 'DD/MM/YYYY hh24:mi') as date_start,
                             to_char(date_end, 'DD/MM/YYYY hh24:mi') as date_end,
                             nb_schemas
@@ -399,6 +411,48 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             .catch(err => {
 
                                 console.error(err);
+                                res.status(500);
+                            });
+                    } else
+                        res.redirect('/');
+                })
+                .catch(err => {
+                    console.error(err);
+                    res.status(500);
+                });
+
+        } else {
+            res.redirect('/');
+        }
+    });
+
+    app.get('/notes_eval', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            resolveUser(cookies.get(req.cookies.user))
+                .then(data => {
+                    if (data) {
+                        let renderData = {
+                            user: data,
+                            page: 'notes_eval'
+                        }
+                        pgsql.query(`SELECT
+                                        ID_EVAL,
+                                        N.NOTE_EVAL,
+                                        NOM_EVAL,
+                                        S.ID_SCHEMA,
+                                        NOM_SCHEMA
+                                        FROM NOTE N
+                                        LEFT JOIN SCHEMA S ON S.id_schema = N.id_schema
+                                        NATURAL JOIN EVALUATION E
+                                        WHERE ID_EVAL = ${req.query.id_eval} AND N.email = '${cookies.get(req.cookies.user)}'`)
+                            .then(data => {
+                                renderData['notes_eval'] = data.rows
+                                res.render('notes_eval', renderData);
+                                console.log(renderData)
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                console.log('errore');
                                 res.status(500);
                             });
                     } else

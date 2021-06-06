@@ -54,11 +54,11 @@ $(function () {
     }
 
     function showImg() {
-        const url = "/image/" + idSchema + '.jpg';
+        const url = "/images/" + idSchema + '.jpg';
 
         $("#img_import").remove();
 
-        $("#canvas").css("background-image", "url(\"" + url + "\")");
+        $("#canvas").css("background-images", "url(\"" + url + "\")");
         const img = new Image();
         img.src = url;
 
@@ -168,7 +168,7 @@ $(function () {
             }
         });
 
-    // chargement d'une nouvelle image
+    // chargement d'une nouvelle images
     $("#import_image").on('change', function () {
         const fic = this.files[0];
 

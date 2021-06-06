@@ -31,15 +31,36 @@ head
                 thead
                   tr
                     th Nom
-                    th Coefficient
-                    th Visibilité
+                    th Schémas
                     if user.permissions.includes("create_schema")
+                      th Coefficient
+                      th Visibilité
                       th Actions
+                    else
+                      th Avancement
+
                 tbody
-                  each val, index in schemas_eval
+                  each val, index in schema_eval
                     tr(id_schema=val.id_schema id="row-" + index)
+                    if !user.permissions.includes("create_schema")
+                      if val.fini === true
+                        td #{val.nom_schema}
+                        td
+                          img(src='images/'+val.id_schema+'.jpg' alt='' style='width:200px; height:auto; filter:grayscale(100%);')
+                        td Terminé
+                      else
+                        td
+                          a(href="/play?id=" + val.id_schema + "?id_eval=" + val.id_eval) #{val.nom_schema}
+                        td
+                          a(href="/play?id=" + val.id_schema + "?id_eval=" + val.id_eval)
+                            img(src='images/' + val.id_schema + '.jpg' alt='' style='width:200px; height:auto;')
+                        td En cours
+                    else
                       td
-                        a(href="/play?id=" + val.id_schema + "?id_eval="+val.id_eval) #{val.nom_schema}
+                        a(href="/play?id=" + val.id_schema) #{val.nom_schema}
+                      td
+                        a(href="/play?id=" + val.id_schema)
+                          img(src='images/'+val.id_schema+'.jpg' alt='' style='width:200px; height:auto;')
                       td #{val.coefficient}
                       if val.schema_public
                         td Public

@@ -11,6 +11,6 @@ module.exports = function (app, dirname) {
 
     app.use('/packages', express.static(dirname + '/node_modules/'));
 
-    app.use('/image', express.static(dirname + '/images/'));
+    app.use('/images', express.static(dirname + '/images/'));
 
 }

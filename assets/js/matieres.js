@@ -169,7 +169,6 @@ $(function () {
             matiere: $(this).parent().parent().attr('id_matiere')
         })
             .done(json => {
-                console.log(json);
                 $('#nomInputEdit').val(json.nom);
                 idEdit = json.id
                 json.users.forEach(user => {
@@ -309,7 +308,6 @@ $(function () {
                 $(".listeGroupes").autocomplete('option', {
                     'source': groupeTemp
                 });
-                console.log(suppr);
                 $('#listeGroupesOnCreate').append(suppr.clone(true));
                 $('#listeGroupesOnEdit').append(suppr);
                 return false;

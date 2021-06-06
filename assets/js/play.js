@@ -21,13 +21,40 @@ function shuffle(array) {
 $(function () {
     const urlParams = new URLSearchParams(window.location.search);
     let id_eval;
-
     let ids = urlParams.get('id').split('?');
     let id_schema = ids[0];
     if (ids[1]) {
         id_eval = ids[1].split('id_eval=')[1]
+
+        $.get('/evaluation', {eval: id_eval})
+            .done(json => {
+                let deb = json.deb;
+                let fin = json.fin;
+                deb = new Date(deb);
+                fin = new Date(fin).getTime();
+                $('#timer').css('float','right');
+                var x = setInterval(function () {
+                    var now = new Date().getTime();
+                    var distance = fin - now;
+                    // Time calculations for days, hours, minutes and seconds
+                    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    // Display the result in the element with id="demo"
+                    $('#time').text(days + "j " + hours + "h "
+                        + minutes + "m " + seconds + "s ");
+
+                    // If the count down is finished, write some text
+                    if (distance < 0) {
+                        clearInterval(x);
+                        $('#time').text("Terminé");
+                    }
+                }, 1000);
+            });
     }
-    console.log(id_eval);
+
 
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
@@ -60,8 +87,6 @@ $(function () {
                 }
 
                 shuffle(aleatoire);
-
-                console.log(num);
                 aleatoire.forEach(i => {
                     let nouveau = $("<div>").attr("class", "ligne").attr("id", i);
                     $("#plateau").append(nouveau);
@@ -75,14 +100,14 @@ $(function () {
                     }
                 })
             });
+
     }
 
     function showImg() {
-        const url = "/image/" + id_schema + '.jpg';
-
+        const url = "/images/" + id_schema + '.jpg';
         $("#img_import").remove();
 
-        $("#canvas").css("background-image", "url(\"" + url + "\")");
+        $("#canvas").css("background-images", "url(\"" + url + "\")");
         const img = new Image();
         img.src = url;
 
@@ -174,7 +199,7 @@ $(function () {
                     id_eval: id_eval,
                     note: note,
                 }).done(msg => {
-                    window.location.href("/schemas_eval?id_eval="+id_eval);
+                    window.location.reload();
                 }).fail(xhr => {
                     console.error(xhr);
                 });
@@ -182,4 +207,5 @@ $(function () {
         }
 
     });
+
 });

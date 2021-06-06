@@ -12,5 +12,6 @@
     <orderEntry type="library" name="all" level="application" />
     <orderEntry type="library" name="jquery-ui" level="application" />
     <orderEntry type="library" name="jquery-easing" level="application" />
+    <orderEntry type="library" name="jquery-datetimepicker" level="application" />
   </component>
 </module>

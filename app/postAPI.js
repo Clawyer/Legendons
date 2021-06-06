@@ -127,7 +127,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             }
                             pgsql.query(`INSERT INTO schema(email) VALUES ('${cookies.get(req.cookies.user)}') RETURNING id_schema`)
                                 .then(data => {
-                                    //deplace image
+                                    //deplace images
                                     const newpath = __dirname.replace('app', '') + '/images/' + data.rows[0].id_schema + '.jpg';
                                     fs.rename(oldpath, newpath, function (err) {
                                         if (err) {
@@ -531,7 +531,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                     let fin = req.body.fin;
                     nom = nom.replace("'", "''");
                     const id = req.body.id;
-                    pgsql.query(`UPDATE evaluation SET nom_eval='${nom}', date_start = '${deb}', date_end = '${fin}' WHERE id_eval = ${id}`)
+                    pgsql.query(`UPDATE evaluation SET nom_eval='${nom}', date_start = '${deb}', date_end = '${fin}', nb_schemas = ${req.body.nb} WHERE id_eval = ${id}`)
                         .then(() => {
                             res.send("Ok")
                         })
@@ -553,6 +553,15 @@ module.exports = function (app, pgsql, dirname, cookies) {
                     if (req.body.ajouter_coef) {
                         for (var i = 0, l = req.body.ajouter_coef.length; i < l; i++) {
                             query = `UPDATE liste_schemas SET coefficient = ${req.body.ajouter_coef[i].value} WHERE id_schema = ${req.body.ajouter_coef[i].label}`;
+                            pgsql.query(query)
+                                .catch(err => {
+                                    console.error(err);
+                                });
+                        }
+                    }
+                    if (req.body.supprimer_coef) {
+                        for (var i = 0, l = req.body.supprimer_coef.length; i < l; i++) {
+                            query = `DELETE FROM liste_schemas WHERE id_eval = ${id} AND id_schema = ${req.body.supprimer_coef[i].label} AND coefficient = ${req.body.supprimer_coef[i].value}`;
                             pgsql.query(query)
                                 .catch(err => {
                                     console.error(err);
@@ -583,6 +592,37 @@ module.exports = function (app, pgsql, dirname, cookies) {
             res.status(401);
     });
 
+    app.post('/deleteEval', (req, res) => {
+        if (req.cookies.user && cookies.has(req.cookies.user)) {
+            hasPermission(cookies.get(req.cookies.user), 'create_eval')
+                .then(() => {
+                    const id = req.body.eval;
+                    pgsql.query(`DELETE FROM SITUE WHERE id_eval = ${id}`)
+                        .then(() => {
+                            pgsql.query(`DELETE FROM LISTE_SCHEMAS WHERE id_eval = ${id}`)
+                                .then(() => {
+                                    pgsql.query(`DELETE FROM EVALUATION WHERE id_eval = ${id}`)
+                                        .then(() => {
+                                            res.send("Ok")
+                                        })
+                                        .catch(err => {
+                                            console.error(err);
+                                            res.status(500);
+                                        });
+                                })
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            res.status(500);
+                        });
+                }).catch(err => {
+                console.error(err);
+                res.status(501);
+            });
+        } else
+            res.status(401);
+    })
+
 
     app.post('/envoi_note', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
@@ -596,4 +636,6 @@ module.exports = function (app, pgsql, dirname, cookies) {
                 })
         } else res.status(501);
     });
+
+
 }

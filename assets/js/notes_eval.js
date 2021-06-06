@@ -89,26 +89,4 @@ $(function () {
         pageEnCours = 1;
         initialisation()
     });
-
-    let idDelete;
-
-    $('.openModalDelete').on('click', function () {
-        idDelete = $(this).parent().parent().attr('id_schema');
-    });
-
-    $('#deleteSchema').on('click', e => {
-        $.post('/deleteSchema', {
-                schema: idDelete
-            })
-            .done(() => {
-                window.location.reload();
-            })
-            .fail(xhr => {
-                console.error(xhr);
-            });
-    });
-
-
-
-
 });

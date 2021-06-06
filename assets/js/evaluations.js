@@ -98,10 +98,10 @@ $(function () {
     var liste_coef = [];
     var listeTemp_C = [];
     var schemas = new Set();
-    var matieres = new Set();
-    var anciennesMat = new Set();
     var anciensSch = new Set();
     var anciensCoef = [];
+    var matiere;
+    var ancienneMat;
     var idEdit;
     var idDelete;
 
@@ -114,7 +114,6 @@ $(function () {
                         value: `${user.id_matiere}`
                     });
             });
-            $(".listeMats").autocomplete('option', 'source', liste_mat)
             listeTemp_M = Array.from(liste_mat);
         })
         .fail(xhr => {
@@ -123,79 +122,64 @@ $(function () {
 
     $('.openModalCreate').on('click', e => {
         listeTemp_M = Array.from(liste_mat);
-        $(".listeMats").autocomplete('option', {
-            'source': listeTemp_M
+        listeTemp_M.forEach(function (item) {
+            $('select.listeMats').append('<option data-tokens="' + item.value + '">' + item.label + '</option>');
         });
+        $('.listeMats').selectpicker('refresh');
         $('#dateEvalCreateD').datetimepicker({
-            format: 'yyyy/mm/dd hh:ii',
             locale: 'fr',
-            language: 'fr'
         });
         $('#dateEvalCreateF').datetimepicker({
-            format: 'yyyy/mm/dd hh:ii',
             locale: 'fr',
-            language: 'fr'
         });
-        // Changer choix année
-        $('#listeMatsOnCreate').html('');
+
         $('#listeSchemasOnCreate').html('');
+        $('#coefCreate').html('');
+        $('.coef').html('');
         $('#createEval input').val('');
         schemas = new Set();
-        matieres = new Set();
+        matiere = $(".listeMats").find(":selected").data('tokens');
+
+        $.get('/listeSchemas', {
+            matiere: matiere
+        }).done(json => {
+            liste_sch = [];
+            json.data.forEach(schema => {
+                liste_sch.push({
+                    label: `${schema.nom_schema}`,
+                    value: `${schema.id_schema}`
+                });
+            });
+            listeTemp_S = Array.from(liste_sch);
+            $(".listeSchemas").autocomplete('option', 'source', liste_sch)
+        })
     });
 
-    $(".listeMats")
-        .autocomplete({
-            minLength: 0,
-            source: liste_mat,
-            focus: function (event, ui) {
-                $(this).val(ui.item.label);
-                return false;
-            },
-            select: function (event, ui) {
-                var index = listeTemp_M.map(val => {
-                    return val.value;
-                }).indexOf(ui.item.value);
-                matieres.add(ui.item.value);
-                $(this).val("");
-                var suppr = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_matiere', ui.item.value).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(ui.item.label + ' ').append($('<i>').addClass("fa fa-trash-o"));
-                suppr.on('click', function (e) {
-                    var id = $(this).attr('id_matiere')
-                    var index = liste_mat.map(val => {
-                        return val.value;
-                    }).indexOf(id);
-                    matieres.delete(id);
-                    listeTemp_M.push(liste_mat[index]);
-                    $(".listeMats").autocomplete('option', {
-                        'source': listeTemp_M
-                    });
-                    $(this).remove();
+    $("select.listeMats").change(function () {
+        matiere = $(this).find(":selected").data('tokens');
+        $.get('/listeSchemas', {
+            matiere: matiere
+        }).done(json => {
+            liste_sch = [];
+            json.data.forEach(schema => {
+                liste_sch.push({
+                    label: `${schema.nom_schema}`,
+                    value: `${schema.id_schema}`
                 });
-                listeTemp_M.splice(index, 1);
-                $(".listeMats").autocomplete('option', {
-                    'source': listeTemp_M
-                });
-                $.get('/listeSchemas', {
-                    matiere: suppr.attr('id_matiere')
-                }).done(json => {
-                    json.data.forEach(schema => {
-                        liste_sch.push({
-                            label: `${schema.nom_schema}`,
-                            value: `${schema.id_schema}`
-                        });
-                    });
-                    listeTemp_S = Array.from(liste_sch);
-                    $(".listeSchemas").autocomplete('option', 'source', liste_sch)
-                    listeTemp_S = Array.from(liste_sch);
-                })
-                    .fail(xhr => {
-                        console.error(xhr);
-                    });
-                $('#listeMatsOnCreate').append(suppr.clone(true));
-                $('#listeMatsOnEdite').append(suppr);
-                return false;
+            });
+            $(".coef").html('')
+            if (matiere !== ancienneMat && ancienneMat !== undefined) {
+                $("#coefEdit").html('');
+                $('#listeSchemasOnEdit').html('');
+            } else {
+                $('#listeSchemasOnCreate').html('');
+                $("#coefCreate").html('');
             }
-        });
+            listeTemp_S = Array.from(liste_sch);
+            $(".listeSchemas").autocomplete('option', 'source', liste_sch)
+        })
+
+    });
 
 
     $(".listeSchemas")
@@ -213,11 +197,11 @@ $(function () {
                 schemas.add(ui.item.value);
                 $(this).val("");
                 var suppr = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_schema', ui.item.value).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(ui.item.label + ' ').append($('<i>').addClass("fa fa-trash-o"));
-                var div1 = $('<div>').addClass("form-group row schema" + ui.item.value).appendTo($('#coef'));
+                var div1 = $('<div>').addClass("form-group row schema" + ui.item.value).appendTo($('.coef'));
                 var div2 = $('<div>').addClass("col-4 mb-3 mb-sm-0").appendTo(div1);
                 $('<label>').addClass("col-form-label").text("Coefficient " + ui.item.label).appendTo(div2);
                 var div3 = $('<div>').addClass("col").appendTo(div1);
-                $('<input>').addClass("form-control form-control-user listeCoef").attr("id", "CoefCreate" + ui.item.value).attr('type', "number").attr("placeholder", 1.00).attr("step", 0.01).attr("min", 0).attr("max", 10).attr('required', "required").attr("maxLength", 30).appendTo(div3)
+                $('<input>').addClass("form-control form-control-user listeCoef").attr("id", "Coef" + ui.item.value).attr('type', "number").attr("placeholder", 1.00).attr("step", 0.01).attr("min", 0).attr("max", 10).attr('required', "required").attr("maxLength", 30).appendTo(div3)
                 suppr.on('click', function (e) {
                     var id = $(this).attr('id_schema')
                     $('.schema' + id).remove();
@@ -231,7 +215,6 @@ $(function () {
                     });
                     $(this).remove();
                 });
-                console.log(liste_sch)
                 listeTemp_S.splice(index, 1);
                 $(".listeSchemas").autocomplete('option', {
                     'source': listeTemp_S
@@ -242,10 +225,108 @@ $(function () {
             }
         });
 
+    $('.openModalEdit').on('click', function (e) {
+        listeTemp_M = Array.from(liste_mat);
+        listeTemp_S = Array.from(liste_sch);
+        anciensCoef = [];
+        listeTemp_M.forEach(function (item) {
+            $('select.listeMats').append('<option data-tokens="' + item.value + '">' + item.label + '</option>');
+        });
+        $('.listeMats').selectpicker('refresh');
+        $('#dateEvalEditD').datetimepicker({
+            locale: 'fr',
+        });
+        $('#dateEvalEditF').datetimepicker({
+            locale: 'fr',
+        });
+        $('#listeSchemasOnEdit').html('');
+        $('.coef').html('');
+        $('#coefEdit').html('');
+        $('#editEval input').val('');
+        $.get('/evaluation', {
+            eval: $(this).parent().parent().attr('id_eval')
+        }).done(json => {
+            $('#nomInputEdit').val(json.nom);
+            $('#dateEvalEditF').val(json.fin);
+            $('#dateEvalEditD').val(json.deb);
+            $("select#listeMatsEdit option[data-tokens=" + json.id_mat + "]").attr('selected', 'selected').change();
+            $.ajaxSetup({async: false});
+            $.get('/listeSchemas', {
+                matiere: json.id_mat
+            }).done(e => {
+                liste_sch = [];
+                e.data.forEach(schema => {
+                    liste_sch.push({
+                        label: `${schema.nom_schema}`,
+                        value: `${schema.id_schema}`
+                    });
+                });
+                listeTemp_S = Array.from(liste_sch);
+            });
+            $.ajaxSetup({async: true});
+
+            idEdit = json.id
+            console.log(idEdit)
+            matiere = json.id_mat
+            ancienneMat = json.id_mat
+            json.schemas.forEach(schema => {
+                anciensCoef.push({
+                    label: parseInt(schema.id_schema),
+                    value: parseInt(schema.coefficient)
+                });
+                schemas.add(schema.id_schema);
+                anciensSch.add(schema.id_schema);
+                var suppr_sch = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_schema', schema.id_schema).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(schema.nom_schema + ' ').append($('<i>').addClass("fa fa-trash-o"));
+                var index = listeTemp_S.map(val => {
+                    return val.value;
+                }).indexOf((schema.id_schema).toString());
+                listeTemp_S.splice(index, 1);
+                $(".listeSchemas").autocomplete('option', {
+                    'source': listeTemp_S
+                });
+                suppr_sch.on('click', function (e) {
+                    var id = $(this).attr('id_schema')
+                    var index = liste_sch.map(val => {
+                        return val.value;
+                    }).indexOf(id);
+                    schemas.delete(id);
+                    listeTemp_S.push(liste_sch[index]);
+                    $(".listeSchemas").autocomplete('option', { // remet à jour la recherche après del
+                        'source': listeTemp_S
+                    });
+                    $(this).remove();
+                    $('.schema' + id).remove();//suppr de l'affichage
+
+                });
+                $('#listeSchemasOnEdit').append(suppr_sch);
+                var id_sch = (schema.id_schema).toString()
+                var exist = $(".schema" + id_sch);
+                if (exist.length === 0) {
+                    var div1 = $('<div>').addClass("form-group row schema" + id_sch).appendTo($('#coefEdit'));
+                    var div2 = $('<div>').addClass("col-4 mb-3 mb-sm-0").appendTo(div1);
+                    $('<label>').addClass("col-form-label").text("Coefficient " + schema.nom_schema).appendTo(div2);
+                    var div3 = $('<div>').addClass("col").appendTo(div1);
+                    $('<input>').addClass("form-control form-control-user listeCoef").attr("id", "Coef" + id_sch).attr('type', "number").attr("value", schema.coefficient).attr("step", 0.01).attr("min", 0).attr("max", 10).attr('required', "required").attr("maxLength", 30).appendTo(div3)
+                }
+            });
+            $(".listeSchemas").autocomplete('option', {
+                'source': listeTemp_S
+            });
+        })
+            .fail(xhr => {
+                console.error(xhr);
+            });
+    })
+
+    $('.openModalDelete').on('click', function (e) {
+        idDelete = $(this).parent().parent().attr('id_eval');
+    });
+
     $('#createEval').on('submit', e => {
         e.preventDefault();
-        $("#coef").find("input").each(function () {
-            var label = $(this).attr('id').slice(10);
+        liste_coef = [];
+        $("#coefCreate").find("input").each(function () {
+            var label = $(this).attr('id').slice(4);
             liste_coef.push({
                 label: parseInt(label),
                 value: parseInt($(this).val())
@@ -253,7 +334,7 @@ $(function () {
         });
         $.post('/ajoutEval', {
             nom: $('#nomInputCreate').val(),
-            matiere: parseInt(Array.from(matieres)[0]),
+            matiere: parseInt(matiere),
             schemas: Array.from(schemas),
             nb: schemas.size,
             date_deb: $('#dateEvalCreateD').val(),
@@ -265,135 +346,54 @@ $(function () {
             console.error(xhr);
         })
     })
-// Problème sur les listes
-    $('.openModalEdit').on('click', function (e) {
-        listeTemp_M = Array.from(liste_mat);
-        listeTemp_S = Array.from(liste_sch);
 
-        $(".listeMats").autocomplete('option', {
-            'source': listeTemp_M
-        });
-        $(".listeSchemas").autocomplete('option', {
-            'source': listeTemp_S
-        });
-        $('#dateEvalEditD').datetimepicker({
-            format: 'yyyy/mm/dd hh:ii',
-            locale: 'fr',
-            language: 'fr'
-        });
-        $('#dateEvalEditF').datetimepicker({
-            format: 'yyyy/mm/dd hh:ii',
-            locale: 'fr',
-            language: 'fr'
-        });
-        $('#listeMatsOnEdit').html('');
-        $('#listeSchemasOnEdit').html('');
-        $('#editEval input').val('');
+    findObject = function findObject(listOfObjects, objectToSearch) {
+        let found = false, matchingKeys = 0;
+        for (let object of listOfObjects) {
+            found = false;
+            matchingKeys = 0;
+            for (let key of Object.keys(object)) {
+                if (object[key] == objectToSearch[key]) matchingKeys++;
+            }
+            if (matchingKeys == Object.keys(object).length) {
+                found = true;
+                break;
+            }
+        }
+        return found;
+    }
 
-        $.get('/evaluation', {
-            eval: $(this).parent().parent().attr('id_eval')
-        }).done(json => {
-            $('#nomInputEdit').val(json.nom);
-            $('#dateEvalEditF').val(json.fin);
-            $('#dateEvalEditD').val(json.deb);
-
-            idEdit = json.id
-            matieres.add(json.id_mat)
-            anciennesMat.add(json.id_mat)
-            var suppr_mat = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_matiere', json.id_mat).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(json.mat + ' ').append($('<i>').addClass("fa fa-trash-o"));
-            var index = listeTemp_M.map(val => {
-                return val.value;
-            }).indexOf(json.id_mat);
-            listeTemp_M.splice(index, 1);
-            suppr_mat.on('click', function (e) {
-                var id = $(this).attr('id_matiere')
-                var index = liste_mat.map(val => {
-                    return val.value;
-                }).indexOf(parseInt(id));
-                matieres.delete(parseInt(id));
-                listeTemp_M.push(liste_mat[index]);
-                $(".listeMats").autocomplete('option', { // remet à jour la recherche après del
-                    'source': listeTemp_M
-                });
-                $(this).remove(); //suppr de l'affichage
-            });
-            $('#listeMatsOnEdit').append(suppr_mat);
-            json.schemas.forEach(schema => {
-                anciensCoef.push({
-                    label: parseInt(schema.id_schema),
-                    value: parseInt(schema.coefficient)
-                });
-                schemas.add(schema.id_schema);
-                anciensSch.add(schema.id_schema);
-                var suppr_sch = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_schema', schema.id_schema).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(schema.nom_schema + ' ').append($('<i>').addClass("fa fa-trash-o"));
-                var index = listeTemp_S.map(val => {
-                    return val.value;
-                }).indexOf(schema.id_schema);
-                listeTemp_S.splice(index, 1);
-                suppr_sch.on('click', function (e) {
-                    var id = $(this).attr('id_schema')
-                    var index = liste_sch.map(val => {
-                        return val.value;
-                    }).indexOf(parseInt(id));
-                    schemas.delete(parseInt(id));
-                    listeTemp_S.push(liste_sch[index]);
-                    $(".listeSchemas").autocomplete('option', { // remet à jour la recherche après del
-                        'source': listeTemp_S
-                    });
-                    $(this).remove(); //suppr de l'affichage
-                });
-                $('#listeSchemasOnEdit').append(suppr_sch);
-                var exist = $("#CoefEdit" + schema.id_schema);
-                if (!exist.length) {
-                    var div1 = $('<div>').addClass("form-group row schema" + schema.id_schema).appendTo($('#coefonEdit'));
-                    var div2 = $('<div>').addClass("col-4 mb-3 mb-sm-0").appendTo(div1);
-                    $('<label>').addClass("col-form-label").text("Coefficient " + schema.nom_schema).appendTo(div2);
-                    var div3 = $('<div>').addClass("col").appendTo(div1);
-                    $('<input>').addClass("form-control form-control-user listeCoef").attr("id", "CoefEdit" + schema.id_schema).attr('type', "number").attr("value", schema.coefficient).attr("step", 0.01).attr("min", 0).attr("max", 10).attr('required', "required").attr("maxLength", 30).appendTo(div3)
-                } else{
-                    // Perte des coefs
-                   exist.html()
-                }
-            });
-            $(".listeSchemas").autocomplete('option', {
-                'source': listeTemp_S
-            });
-            $(".listeMats").autocomplete('option', {
-                'source': listeTemp_M
-            });
-        })
-            .fail(xhr => {
-                console.error(xhr);
-            });
-    })
-
+    removed = function (old_array, new_array) {
+        let foundList = [];
+        for (let object of old_array) {
+            if (!this.findObject(new_array, object)) foundList.push(object);
+        }
+        return foundList;
+    };
+    added = function (old_array, new_array) {
+        let foundList = [];
+        for (let object of new_array) {
+            if (!this.findObject(old_array, object)) foundList.push(object);
+        }
+        return foundList;
+    };
 
     $('#editEval').on('submit', e => {
+        liste_coef = [];
         e.preventDefault();
-        $("#coefonEdit").find("input").each(function () {
-            var label = $(this).attr('id').slice(10);
+        $("#coefEdit").find("input").each(function () {
+            var label = $(this).attr('id').slice(4);
             liste_coef.push({
                 label: parseInt(label),
                 value: parseInt($(this).val())
             });
         });
-        var l;
-        var bool;
+
         var ajouter_coef = [];
         var supprimer_coef = [];
-        var supprimer_m = new Set();
-        var ajouter_m = new Set();
         var supprimer_s = new Set();
         var ajouter_s = new Set();
 
-        matieres.forEach(mat => {
-            if (!anciennesMat.has(mat))
-                ajouter_m.add(mat);
-        });
-        anciennesMat.forEach(mat => {
-            if (!matieres.has(mat))
-                supprimer_m.add(mat);
-        });
         anciensSch.forEach(sch => {
             if (!schemas.has(sch))
                 supprimer_s.add(sch);
@@ -402,36 +402,21 @@ $(function () {
             if (!anciensSch.has(sch))
                 ajouter_s.add(sch);
         });
-        if (liste_coef.length >= anciensCoef.length)
-            l = liste_coef.length,
-                bool = true
-        else
-            l = anciensCoef.length,
-                bool = false
+        ajouter_coef = added(anciensCoef, liste_coef);
+        supprimer_coef = removed(anciensCoef, liste_coef);
 
-        for (var i = 0; i < l; i++)
-            if (bool) {
-                if (liste_coef[i].label !== anciensCoef[i].label)
-                    ajouter_coef.push(liste_coef[i])
-                else if (liste_coef[i].value !== anciensCoef[i].value)
-                    ajouter_coef.push(liste_coef[i])
-            } else {
-                if (anciensCoef[i].label !== liste_coef[i].label)
-                    supprimer_coef.push(liste_coef[i])
-                else if (liste_coef[i].value !== anciensCoef[i].value)
-                    ajouter_coef.push(liste_coef[i])
-            }
         $.post('/editEval', {
             nom: $('#nomInputEdit').val(),
             deb: $('#dateEvalEditD').val(),
             fin: $('#dateEvalEditF').val(),
             id: idEdit,
-            ajouter_m: Array.from(ajouter_m),
-            supprimer_m: Array.from(supprimer_m),
+            ajouter_m: matiere,
+            supprimer_m: ancienneMat,
             ajouter_s: Array.from(ajouter_s),
             supprimer_s: Array.from(supprimer_s),
             ajouter_coef: ajouter_coef,
-            supprimer_coef: supprimer_coef
+            supprimer_coef: supprimer_coef,
+            nb: liste_coef.length
         })
             .done(msg => {
                 window.location.reload();
@@ -441,16 +426,18 @@ $(function () {
             });
     });
 
-    $("#dataTable").on('click', function(){
-        console.log($(this))
+    $('#deleteEval').on('click', e => {
+        console.log(idDelete)
+        $.post('/deleteEval', {
+            eval: idDelete
+        })
+            .done(msg => {
+                window.location.reload();
+            })
+            .fail(xhr => {
+                console.error(xhr);
+            });
     });
-    /*$('#clock').countdown(get15dayFromNow(), function(event) {
-        var $this = $(this).html(event.strftime(''
-            + '<span class="h1 font-weight-bold">%D</span> Day%!d'
-            + '<span class="h1 font-weight-bold">%H</span> Hr'
-            + '<span class="h1 font-weight-bold">%M</span> Min'));
-    });*/
-
 });
 
 
