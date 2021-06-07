@@ -194,7 +194,7 @@ $(function () {
                 var index = listeTemp_S.map(val => {
                     return val.value;
                 }).indexOf(ui.item.value);
-                schemas.add(ui.item.value);
+                schemas.add(parseInt(ui.item.value));
                 $(this).val("");
                 var suppr = $('<button>').addClass("btn btn-secondary btn-sm").attr('id_schema', ui.item.value).attr('type', "button").css("padding", "2px 4px").css("margin", "0 2px 2px 0").text(ui.item.label + ' ').append($('<i>').addClass("fa fa-trash-o"));
                 var div1 = $('<div>').addClass("form-group row schema" + ui.item.value).appendTo($('.coef'));
@@ -266,7 +266,6 @@ $(function () {
             $.ajaxSetup({async: true});
 
             idEdit = json.id
-            console.log(idEdit)
             matiere = json.id_mat
             ancienneMat = json.id_mat
             json.schemas.forEach(schema => {
@@ -404,7 +403,12 @@ $(function () {
         });
         ajouter_coef = added(anciensCoef, liste_coef);
         supprimer_coef = removed(anciensCoef, liste_coef);
-
+        console.log("old",anciensCoef,"new",liste_coef)
+        liste_coef = liste_coef.filter(x => !ajouter_coef.includes(x));
+        ajouter_coef = ajouter_coef.concat(liste_coef);
+        console.log(ajouter_coef,supprimer_coef)
+        console.log(anciensSch,schemas)
+        console.log(ajouter_s,supprimer_s)
         $.post('/editEval', {
             nom: $('#nomInputEdit').val(),
             deb: $('#dateEvalEditD').val(),

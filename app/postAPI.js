@@ -526,11 +526,11 @@ module.exports = function (app, pgsql, dirname, cookies) {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             hasPermission(cookies.get(req.cookies.user), 'create_eval')
                 .then(() => {
-                    let nom = req.body.nom;
+                    let nom = (req.body.nom).replace("'", "''");
                     let deb = req.body.deb;
                     let fin = req.body.fin;
-                    nom = nom.replace("'", "''");
                     const id = req.body.id;
+                    let coef = req.body.ajouter_coef;
                     pgsql.query(`UPDATE evaluation SET nom_eval='${nom}', date_start = '${deb}', date_end = '${fin}', nb_schemas = ${req.body.nb} WHERE id_eval = ${id}`)
                         .then(() => {
                             res.send("Ok")
@@ -540,19 +540,23 @@ module.exports = function (app, pgsql, dirname, cookies) {
                         });
                     if (req.body.ajouter_s) {
                         query = `INSERT INTO liste_schemas(id_eval, id_schema, coefficient) VALUES `;
-                        for (var i = 0, l = req.body.ajouter_s.length; i < l; i++) {
-                            if (req.body.ajouter_s[i] === req.body.ajouter_coef[i].label)
-                                query += `(${id}, ${req.body.ajouter_s[i]}, ${req.body.ajouter_coef[i].value}),`;
-                        }
+                        req.body.ajouter_s.forEach(schema => {
+                            console.log(schema)
+                            console.log(coef)
+                            let coef_val = coef.find(x => x.label === schema).value;
+                            console.log(coef_val);
+                            query += `(${id}, ${parseInt(schema)}, ${parseInt(coef_val)}),`;
+                            coef = coef.filter((i) => i.label !== schema);
+                        });
                         query = query.slice(0, -1);
                         pgsql.query(query)
                             .catch(err => {
                                 console.error(err);
                             });
                     }
-                    if (req.body.ajouter_coef) {
-                        for (var i = 0, l = req.body.ajouter_coef.length; i < l; i++) {
-                            query = `UPDATE liste_schemas SET coefficient = ${req.body.ajouter_coef[i].value} WHERE id_schema = ${req.body.ajouter_coef[i].label}`;
+                    if (coef) {
+                        for (var i = 0, l = coef.length; i < l; i++) {
+                            query = `UPDATE liste_schemas SET coefficient = ${coef[i].value} WHERE id_schema = ${coef[i].label}`;
                             pgsql.query(query)
                                 .catch(err => {
                                     console.error(err);
