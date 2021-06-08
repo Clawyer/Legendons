@@ -31,7 +31,7 @@ $(function () {
                 let deb = json.deb;
                 let fin = json.fin;
                 fin = new Date(fin).getTime();
-                $('#timer').css('float','right');
+                $('#timer').css('float', 'right');
                 var x = setInterval(function () {
                     var now = new Date().getTime();
                     var distance = fin - now;
@@ -72,6 +72,10 @@ $(function () {
     if (id_schema) {
         $.get('/schema', {id: id_schema})
             .done(json => {
+                let evals = json.evals
+                if (JSON.parse(json.bool) === false && !id_eval )
+                    if ( evals )
+                        window.location.href = "/";
                 let legendes = JSON.parse(json.legendes);
                 let fake = JSON.parse(json.fake) || [];
                 x_debut = JSON.parse(json.x_debut);
@@ -80,6 +84,7 @@ $(function () {
                 y_fin = JSON.parse(json.y_fin);
                 num = legendes.length;
                 showImg().then(retracer);
+
 
                 aleatoire = new Array(num + fake.length);
                 for (let i = 0; i < aleatoire.length; i++) {
@@ -100,7 +105,6 @@ $(function () {
                     }
                 })
             });
-
     }
 
     function showImg() {
@@ -140,7 +144,7 @@ $(function () {
         }
     }
 
-    function convert(num,den,e) {
+    function convert(num, den, e) {
         return (num * e) / den;
     }
 
@@ -196,7 +200,8 @@ $(function () {
             }
         } else {
             if (fini) {
-                note = convert(correct.length, num.length, 20);
+                note = convert(correct.length, num, 20);
+                console.log(id_schema, id_eval, note, correct.length, num,)
                 $.post('/envoi_note', {
                     id_schema: id_schema,
                     id_eval: id_eval,

@@ -16,9 +16,11 @@ head
                             .card-body.text-center.shadow
                                 img.rounded-circle.mb-3.mt-4(src='/assets/img/dogs/image2.jpeg' width='160' height='160')
                                 .mb-3
-                                    button.btn.btn-primary.btn-sm(type='button')
-                                        | Modifier la
-                                        | photo
+                                    .file-loading
+                                        button#profile_picture.btn.btn-primary.btn-sm(type='button')
+                                            | Modifier la
+                                            | photo
+                                        input#input_file(name='profile_picture' type='file' style='display:none;')
                         .card.shadow.mb-4
                             .card-header.py-3
                                 h6.text-primary.font-weight-bold.m-0 Mes matières

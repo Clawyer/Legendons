@@ -96,7 +96,6 @@ $(function () {
     var listeTemp_M = []
     var listeTemp_S = [];
     var liste_coef = [];
-    var listeTemp_C = [];
     var schemas = new Set();
     var anciensSch = new Set();
     var anciensCoef = [];
@@ -290,7 +289,7 @@ $(function () {
                     }).indexOf(id);
                     schemas.delete(id);
                     listeTemp_S.push(liste_sch[index]);
-                    $(".listeSchemas").autocomplete('option', { // remet à jour la recherche après del
+                    $(".listeSchemas").autocomplete('option', {
                         'source': listeTemp_S
                     });
                     $(this).remove();
@@ -403,12 +402,9 @@ $(function () {
         });
         ajouter_coef = added(anciensCoef, liste_coef);
         supprimer_coef = removed(anciensCoef, liste_coef);
-        console.log("old",anciensCoef,"new",liste_coef)
         liste_coef = liste_coef.filter(x => !ajouter_coef.includes(x));
         ajouter_coef = ajouter_coef.concat(liste_coef);
-        console.log(ajouter_coef,supprimer_coef)
-        console.log(anciensSch,schemas)
-        console.log(ajouter_s,supprimer_s)
+
         $.post('/editEval', {
             nom: $('#nomInputEdit').val(),
             deb: $('#dateEvalEditD').val(),

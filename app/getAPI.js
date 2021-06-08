@@ -95,15 +95,39 @@ module.exports = function (app, pgsql, dirname, cookies) {
 
     app.get('/schema', (req, res) => {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
-            pgsql.query(`SELECT * FROM schema S
-            WHERE id_schema=${req.query.id}`)
-                .then(data => {
-                    res.json(data.rows[0]);
-                })
-                .catch(err => {
+            let bool;
+            pgsql.query(`SELECT * FROM utilisateur U
+            NATURAL JOIN role R
+            WHERE email= '${cookies.get(req.cookies.user)}'`, (err, data1) => {
+                if (err) {
                     res.status(500);
                     console.error(err);
-                });
+                }
+                if (data1) {
+                    data1.rows[0].permissions = data1.rows[0].permissions.split(" ")
+                    bool = data1.rows[0].permissions.includes('create_schema');
+                    pgsql.query(`SELECT * FROM schema S WHERE id_schema=${req.query.id}`, (err, data2) => {
+                        if (err) {
+                            res.status(500);
+                            console.error(err);
+                        }
+                        pgsql.query(`SELECT ID_EVAL FROM LISTE_SCHEMAS L NATURAL JOIN EVALUATION E
+                                WHERE ID_SCHEMA = ${req.query.id} AND (DATE_START < NOW() AND DATE_END > NOW())`, (err, data3) => {
+                            if (err) {
+                                res.status(500);
+                                console.error(err);
+                            }
+                            res.json({
+                                ...data2.rows[0],
+                                evals: data3.rows,
+                                bool: bool
+                            });
+                        });
+                    })
+                }
+
+            })
+
         } else
             res.status(401)
     });

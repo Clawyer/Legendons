@@ -541,10 +541,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
                     if (req.body.ajouter_s) {
                         query = `INSERT INTO liste_schemas(id_eval, id_schema, coefficient) VALUES `;
                         req.body.ajouter_s.forEach(schema => {
-                            console.log(schema)
-                            console.log(coef)
                             let coef_val = coef.find(x => x.label === schema).value;
-                            console.log(coef_val);
                             query += `(${id}, ${parseInt(schema)}, ${parseInt(coef_val)}),`;
                             coef = coef.filter((i) => i.label !== schema);
                         });
@@ -632,7 +629,7 @@ module.exports = function (app, pgsql, dirname, cookies) {
         if (req.cookies.user && cookies.has(req.cookies.user)) {
             pgsql.query(`INSERT INTO Note (id_eval,email,note_eval,id_schema) VALUES (${req.body.id_eval},'${cookies.get(req.cookies.user)}', ${req.body.note},${req.body.id_schema})`)
                 .then(() => {
-                    res.send("Ok")
+                    res.send("Ok");
                 })
                 .catch(err => {
                     console.error(err);

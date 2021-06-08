@@ -246,11 +246,39 @@ module.exports = function (app, pgsql, dirname, cookies) {
                             page: 'schemas'
                         }
                         pgsql.query(`SELECT DISTINCT id_schema, nom_schema, nom_matiere, schema_public, S.email
-                            FROM schema S NATURAL JOIN matiere M
-                            JOIN appartenir A ON A.id_matiere=M.id_matiere
-                            WHERE (S.email='${renderData.user.email}'
-                            OR (A.email='${renderData.user.email}' AND schema_public=true))
-                            ${req.query.id_matiere ? "AND S.id_matiere=" + req.query.id_matiere : ""};`)
+                                            FROM schema S
+                                            NATURAL JOIN (
+                                                SELECT ID_MATIERE, nom_matiere
+                                            FROM
+                                                (SELECT M.ID_MATIERE AS ID_MATIERE,
+                                                        NOM_MATIERE
+                                                    FROM
+                                                        (SELECT ID_MATIERE,EMAIL
+                                                            FROM EST_COMPRIS_DANS E
+                                                            NATURAL JOIN EST_RELIE ES
+                                                            UNION SELECT ID_MATIERE,EMAIL
+                                                            FROM APPARTENIR A) T
+                                                    NATURAL JOIN MATIERE M
+                                                    NATURAL JOIN
+                                                        (SELECT M.ID_MATIERE,
+                                                                COUNT(ID_SCHEMA) AS NB_SCHEMAS
+                                                            FROM MATIERE M NATURAL
+                                                            LEFT JOIN SCHEMA S
+                                                            GROUP BY M.ID_MATIERE,
+                                                                M.NOM_MATIERE
+                                                            ORDER BY M.NOM_MATIERE) T2
+                                                    GROUP BY M.ID_MATIERE,
+                                                        M.NOM_MATIERE) R
+                                            WHERE ID_MATIERE IN
+                                                    (SELECT ID_MATIERE
+                                                        FROM EST_COMPRIS_DANS E
+                                                        NATURAL JOIN EST_RELIE ES
+                                                        UNION SELECT ID_MATIERE
+                                                        FROM APPARTENIR A
+                                                        WHERE EMAIL = '${renderData.user.email}')) M
+                                            JOIN appartenir A ON A.id_matiere=M.id_matiere
+                                            WHERE (S.email='${renderData.user.email}' OR schema_public=true)
+                                            ${req.query.id_matiere ? "AND S.id_matiere=" + req.query.id_matiere : ""};`)
                             .then(data => {
                                 renderData['schemas'] = data.rows
                                 res.render('schemas', renderData);
